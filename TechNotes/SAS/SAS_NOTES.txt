@@ -1,0 +1,384 @@
+THE SAS PROGRAMMING
+*********************
+BASICS
+------
+
+
+1. The below code will create a data set named sales with columns specified in input and rows specified in datalines.This is called DATA STEP
+So Result of a DATA STEP is a sas data set.
+
+data sales;
+input location_id store_id  product_id tim_dim_key unit_sold unit_price;
+datalines;
+100 101 1555 1254 11 125
+100 101 1556 1254 09 110
+100 101 1557 1254 10 150
+100 102 1555 1254 10 125
+100 102 1556 1254 15 110
+100 102 1557 1254 10 150
+200 202 1555 1254 11 125
+200 202 1556 1254 13 110
+200 202 1557 1254 16 150
+;
+run;
+
+2.You can run SQL over above data set as below. This is called PROC STEP.
+proc sql;
+select * from sales;
+
+3. PROC means procedure 
+
+4.Statistical analysis such as min,max,standard deviation,sum,average(mean) etc can be produced over above sales data set as follows
+
+proc means data=sales sum min max;
+var unit_price unit_sold;
+run;
+
+OR as below
+
+proc means data=sales sum min max;
+var unit_price unit_sold;
+run;
+
+5. Numerical values can be automatically read by SAS while character/String values can not. So while defining a string column, you need to put 
+a $ at the end as given below:
+
+data product;
+input  product_id product_name$;
+datalines;
+1555 abc
+1556 ade
+1557 adf
+1558 asd
+1559 acf
+1560 asc
+;
+run;
+
+6. While defining columns , we can define the label as well as below
+data product;
+input product_id product_name$;
+datalines;
+1555 abc
+1556 abd
+1557 abe
+1558 abf
+1559 abg
+1560 abi
+;
+run;
+
+7.
+This snippet prints with all default options as normal
+	
+proc print data=product;
+run;
+
+This snippet prints with a title and it avoids date to be printed
+
+proc print data=product;
+title  bold underlin=3 "Product_Info" ;
+options nodate;
+run;
+
+This snippet avoids printing the obs (obervation number) 
+
+proc print data=product noobs;
+run;
+ 
+ 
+8. Any Data set you have created without any library prefix will be saved in the work library. Once you will  close the session 
+it will be wiped out from work library.So if you want to retain your data , then create it as below
+
+data SASUSER.product;
+input product_id product_name$;
+datalines;
+1555 abc
+1556 abd
+1557 abe
+1558 abf
+1559 abg
+1560 abi
+;
+run;
+
+here SASUSER is a permenant library.
+
+9. You can create your own libraries using below command
+
+libname mydata "fully_qualified_path_of_directory"
+
+where 
+libname is the command
+mydata is the library name
+fully_qualified_path_of_directory is your complete path to the folder
+
+
+example is :
+
+libname mydata "/folders/myfolders/mydata";
+run;
+
+
+
+But libraries created using 'LIBNAME' will not be retained after session restarts
+On the other hand , eventhough library name will not be retained , the data will be there in the same path of library.
+So if you run the libname statement again, the path will be assigned and you will get all the data back
+
+For making permenant libraries , you need make it from UI with option "Re-create this library at start-up" checked.
+
+10. If you want to explore all metadata of a dataset, you can do it in two ways
+
+a. using UI. Right click on dataset and go to properties , where you can find all metadata
+b. run the below procedure
+
+proc contents data=mydata.sales;
+run;
+
+Now here you will get all metadata information
+Here the column names will be printed in alphabetical order, not in the order they have created.
+If you want to see it in the order they have created.You can use below statement
+
+proc contents data=mydata.sales varnum;
+run;
+
+Now if you want to get all this metadata into a table, then run the procedure as below
+
+proc contents data=mydata.sales varnum out=sales_metadata;
+run;
+
+here all metadata will be saved in sales_metadata dataset;
+
+
+11. A SAS Data Set name can not have more than 32 characters 
+
+12. Maximum length of a string data type in SAS is 32767
+
+13.SAS DATE:
+
+SAS date value is stored as the number of days between January 1, 1960 and specific date 
+
+DIFFERENT INPUT METHODS
+------------------------
+
+We have different type of input methods in SAS
+
+Column input
+Formatted input
+named input
+List input
+
+1.
+
+List input method:
+
+eg 1 :
+
+data mydata.customer;
+length customer_name $ 20;
+input customer_id customer_name$;
+datalines;
+1212 AkhilPathirippilly
+1213 AmitKumarRavindra
+1214 AnujBajpai
+1215 NiranjanSagar
+;
+run;
+
+
+
+Here we will be defining the length of the variable using length statement.
+If its a string you can give up to 32767 following a $, but if its a numeric variable you can give up to 8 without a "following $"
+
+ 
+eg 2 :
+
+data mydata.customer;
+length  customer_name $ 20 customer_id 8 ;
+input customer_id customer_name$;
+datalines;
+1212 AkhilPathirippilly
+1213 AmitKumarRavindra
+1214 AnujBajpai
+1215 NiranjanSagar
+;
+run;
+
+The data set will be printed as in order of the length statement.
+
+But if you want to change the order , you can specify it as below in var statement in PROC PRINT as below
+
+proc print data=mydata.customer;
+var customer_id customer_name;
+run;
+
+Alsoif you have a space in between your string value , list input column will consider the value upto that space only.
+In List input method , space is a column delimitter.
+
+
+
+2. When ever there is a missing value , period need to be used to represent it as below.
+
+
+data sales;
+input location_id store_id  product_id tim_dim_key unit_sold unit_price;
+datalines;
+100 . 1555 1254 11 125
+100 101 1556 1254 09 110
+200 202 1557 1254 16 150
+;
+run;
+
+here store_id value is missing/null/blank for first record which is represented as .
+
+But if try to replace '.' with a blank and if we run it, SAS will replace the next variable value with this value and will end up in a mess up.
+This default behaviour of SAS is called FLOW OVER.
+
+3.
+
+Column input method:
+
+Here you will define the start and end positions of each column as below.
+
+data customer;
+input customer_id 1-4 customer_name $ 5-24 customerAge 29-31 ;
+datalines;
+1212 Akhil Pathirippilly    20
+1213 Amit Kumar Ravindra     25
+1214 Anuj Bajpai            29
+1215 Niranjan Sagar         30
+;
+run;
+
+So here space or blanks doesn't matter. Only matters is Positions
+
+
+4.
+Formatted input method:
+
+data scores;
+input @1name $12. @3 score$ 5. @4 score2$ 6.;
+datalines;
+values can contain embeded blanks
+;
+
+
+here we are defining the start position using @ and length is defined with a number followed by period '.'
+
+so for example  here 'name' column will start from first position and will take up to 12 characters as values.
+
+
+5.
+
+Absolute input method:
+
+this is also another type of formatted input method. Here we won't mention the start position using @.
+Instead , the veru first start position is by default 1 which will be picked for the first column by SAS automatically.
+And next start  positions are determined using + symbol as follows:
+
+data scores;
+input name $12. +3 score$ 5. +4 score2$ 6.;
+datalines;
+values can contain embeded blanks
+;
+
+here score column values will be picked and read by SAS as starting from 3rd position after 12th position which is defined as the ending of first column
+
+
+Common points:
+
+a. if you are mentioning $ its a string otherwise will be read as a number
+b. if you are definig a . after length digit , it means that variable can have length up to that position from previous column end position
+
+eg  :
+
+data scores;
+input name $12. score$ 5. score2$ 6.;
+datalines;
+values can contain embeded blanks
+;
+
+here variable 'name' will read as any string from position 1 to 12
+variable 'score' will be read as any string from position 13th to 17th 
+and variable score2$ will be read as any string from position 18th to 23rd
+
+c. If you are not defining any length for variable , default blank/white space will be considered as the column seperator
+
+eg  :
+
+data scores;
+input name $12. score$ 5. score2$;
+datalines;
+values can contain embeded blanks
+;
+
+here score2$ will be read by SAS from 18th position to next occurence of space
+
+d.If you are defing length without a period '.' , then value for that column will be read as the single character exactly in  that position starting from 1st position
+
+eg:
+data scores;
+input name $12. score$ 5 score2$ 6.;
+datalines;
+values can contain embeded blanks
+;
+
+here score variable will be read as the single character on 5th position
+
+6. 
+
+Name input method
+
+data games;
+input name=$ score1= score2=;
+datalines;
+name=riley c score1=1132 score2=1187
+name=reddy score1=1134 score2=1188
+;
+
+here we will define the variables with types and name as in general programming languages
+
+7. Another way of creating dataset is as below
+
+data abc;
+
+a="sda asdsad";
+b="sdcas sds";
+c=30;
+output;
+a="sdsdsaa asdsad";
+b="sdcasdsaas sds";
+c=3sads0;
+output;
+
+This also will produce 2 observations and 3 variables.
+
+If you ar not mentioning the keyword 'output;' , your first value will be replaced with second value for same variable.
+And what ever string (number variables don't have this limitation) you are giving for a variable in first set of data , the length will be auto inferred by SAS and
+even if you provide a much higher length data in second data set , the value will be trimmed to the length of first value for the same
+variable.
+
+
+
+8. Using & and delimitting columns with double spaces
+
+Usually if you use & after a variable name , the variable will look for a double space to terminate the value reading for that variable
+
+eg:
+
+data customer;
+input customer_id &  customer_name & $25. customerAge 2. ;
+datalines;
+1212  Akhil Pathirippilly  20
+1213  Amit Kumar Ravindra  25
+1214  Anuj Bajpai  29
+1215  Niranjan Sagar  30
+;
+run; 
+
+
+
+
+
+
+

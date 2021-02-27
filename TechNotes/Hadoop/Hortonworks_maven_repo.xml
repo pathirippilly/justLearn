@@ -1,0 +1,11 @@
+<repository> 
+<releases> 
+<enabled>true</enabled> 
+</releases> 
+<snapshots> 
+<enabled>true</enabled> 
+</snapshots> 
+<id>hortonworks.extrepo</id> 
+<name>Hortonworks HDP</name> 
+<url>http://repo.hortonworks.com/content/repositories/releases</url> 
+</repository>

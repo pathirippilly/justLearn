@@ -1,0 +1,306 @@
+INFORMATICA PC
+********************
+
+1. Architecture
+
+Components:
+
+Domain
+-------
+
+Informatica Domain is the fundamental administrative unit in Informatica tool.
+It is a collection of nodes and services
+
+Nodes
+-------
+
+Node is a logical representation of a machine inside the domain. Node is required to run services and processes for Informatica.
+You can have multiple nodes in a domain. In a domain, you will also find a gateway node.
+The gateway node is responsible for receiving requests from different client tools and routing those requests to different nodes and services.
+
+Services
+-------
+
+There are two types of services in Domain
+
+
+Service Manager: 
+Service manager manages domain operations like authentication, authorization, and logging. 
+It also runs application services on the nodes as well as manages users and groups.
+
+Application Services: 
+Application service represents the server specific services like integration service, repository service, 
+and reporting service. These services run on different nodes based upon the configuration.
+
+PowerCenter Repository
+----------------------------
+
+PowerCenter repository is a relational database like Oracle, Sybase, SQL server and it is managed by repository service. 
+It consists of database tables that store metadata.
+
+Client Tools:
+
+Repository Manager
+Designer
+Workflow Manager 
+Workflow Monitor
+
+These clients can access to the repository using repository service only.
+
+To manage a repository there exists an Informatica service called Repository Service. 
+A single repository service handles exclusively only one repository. 
+Also, a repository service can execute on multiple nodes to increase the performance.
+
+The repository services use locks on the objects, so multiple users cannot modify the same object same time
+
+You can enable version control in the repository. With the version control feature, you can maintain different versions of the same object.
+
+Objects created in the repository can have following three state
+
+Valid: Valid objects are those objects whose syntax is correct according to Informatica. These objects can be used in the execution of workflows.
+
+Invalid: Invalid objects are those who does not adhere to the standard or rules specified. When any object is saved in Informatica, 
+it is checked whether its syntax and properties are valid or not, and the object is marked with the status accordingly.
+
+Impacted: Impacted objects are those whose child objects are invalid. 
+For example in a mapping if you are using a reusable transformation, and 
+this transformation object becomes invalid then the mapping will be marked as impacted.
+
+Properties of Domain
+---------------------
+
+Resilience timeout – If any of the integration service or repository services goes down then resilience timeout is the no of seconds 
+the application service tries to connect to those services.
+
+Restart Period – It is the maximum number of seconds the domain spends to restart a service.
+
+Dispatch Mode – It is the policy used by the load balancer to dispatch tasks to various nodes.
+
+Database type – The type of database on which domain is configured.
+
+Database host – Hostname of the machine on which domain is configured.
+
+Database port & name – It is the database port and the database instance name for the domain.
+
+
+Powercenter client & Server Connectivity
+------------------------------------------
+
+PowerCenter client tools are development tools which are installed on the client machines. Powercenter designer, workflow manager, a repository manager,
+and workflow monitor are the main client tools.
+
+The mappings and objects that we create in these client tools are saved in the Informatica repository which resides on the Informatica server.
+So the client tools must have network connectivity to the server.
+
+On the other hand, PowerCenter client connects to the sources and targets to import the metadata and source/target structure definitions. 
+So it also must have connectivity to the source/target systems.
+
+To connect to the integration service and repository service, PowerCenter client uses TCP/IP protocols and
+To connect to the sources/targets PowerCenter client uses ODBC drivers.
+
+Repository Service
+---------------------
+
+The repository service maintains the connections from Powercenter clients to the PowerCenter repository. 
+It is a separate multi-threaded process, and it fetches, inserts and updates the metadata inside the repository. 
+It is also responsible for maintaining consistency inside the repository metadata.
+
+Integration Service
+---------------------
+
+Integration service is the executing engine for the Informatica, in other words, 
+this is the entity which executes the tasks that we create in Informatica. This is how it works
+
+A user executes a workflow
+Informatica instructs the integration service to execute the workflow
+The integration service reads workflow details from the repository
+Integration service starts execution of the tasks inside the workflow
+Once execution is complete, the status of the task is updated i.e. failed, succeeded or aborted.
+After completion of execution, session log and workflow log is generated.
+This service is responsible for loading data into the target systems
+The integration service also combines data from different sources
+
+
+2. Type of Lookup Caches in Informatica 
+
+
+Static cache:
+
+Static Cache is same as a Cached Lookup in which once a Cache is created the Integration Service always queries the Cache instead of the Lookup Table.
+In Static Cache when the Lookup condition is true it return value from lookup table else returns Null or Default value.
+In Static Cache the important thing is that you cannot insert or update the cache.
+
+Dynamic cache:
+
+In Dynamic Cache we can insert or update rows in the cache when we pass the rows. 
+The Integration Service dynamically inserts or updates data in the lookup cache and passes the data to the target. 
+The dynamic cache is synchronized with the target
+
+Shared cache:
+
+When we use shared Cache Informatica server creates the cache memory for multiple lookup transformations in the mapping 
+and once the lookup is done for the first lookup then memory is released and use that memory used by the other look up transformation.
+We can share the lookup cache between multiple transformations. Unnamed cache is shared between transformations 
+in the same mapping and named cache between transformations in the same or different mappings.
+
+Persistemt Cache:
+
+If we use Persistent cache Informatica server processes a lookup transformation and saves the lookup cache files and reuses them the next time. 
+The Integration Service saves or deletes lookup cache files after a successful session run based on whether the Lookup cache is checked as persistent or not
+In order to make a Lookup Cache as Persistent cache you need to make the following changes
+
+Lookup cache persistent: Needs to be checked
+Cache File Name Prefix: Enter the Named Persistent cache file name
+Re-cache from lookup source: Needs to be checked
+
+Recache from database
+If the persistent cache is not synchronized with the lookup table you can configure the lookup transformation to rebuild the lookup cache.
+
+
+3. What are Joiner Caches
+
+
+When a Joiner transformation occurs in a session, the Informatica Server reads all the records from the master source and builds index and data caches based on the master rows. 
+After building the caches, the Joiner transformation reads records from the detail source and performs joins.
+
+
+Joiner cache have 2 types of cache 1.Index cache 2. Data cache.
+
+Index cache stores all the port values which are participated in the join condition and Data cache have stored all ports which are not participated in the join condition.
+
+
+4. Performance Tuning in Informatica
+
+section 1
+__________
+
+Joiner Transformation -
+
+Always prefer to perform joins in the database if possible, as database joins are faster than joins created in Informatica joiner transformation.
+Sort the data before joining if possible, as it decreases the disk I/O performed during joining.
+Make the table with less no of rows as master table.
+
+Lookup Transformation –
+
+Create an index for the column in a lookup table which is used in lookup condition. Since the lookup table will be queried for looking up the matching data, 
+adding an index would increase the performance.
+If possible, instead of using lookup transformation use join in the database. As database joins are faster, performance will be increased.
+Delete unnecessary columns from the lookup table and keep only the required columns. This will bring down the overhead of fetching the extra columns from the database.
+
+Filter Transformation –
+
+Use filter transformation as early as possible inside the mapping. If the unwanted data can be discarded early in the mapping, it would increase the throughput.'
+Use source qualifier to filter the data. You can also use source qualifier SQL override to filter the records, instead of using filter transformation.
+
+Aggregator Transformation - 
+
+Filter the data before aggregating it. If you are using filter transformation in the mapping, then filter the data before using aggregator as 
+it will reduce the unnecessary aggregation operation.
+Limit the no of ports used in the aggregator transformation. This will reduce the volume of data that aggregator transformation stores inside the cache.
+
+Source Qualifier Transformation - 
+
+Bring only the required columns from the source. Most of the times not all the columns of the source table are required, so bring only the required fields 
+by deleting the unnecessary columns.
+Avoid using order by clause inside the source qualifier SQL override. The order by clause requires additional processing and performance can be increased by avoiding it
+
+section 2
+___________
+
+Source Bottle necks:
+
+Create Indexes on key columns which helps reading the source data easily. 
+Restrict the source data as much as you required at first instead of passing those unwanted data to the entire flow.
+Use sql overide if you want to restrict some rows upfront rather than passing the rows to subsequent filter tot remove as SQL override runs 
+on database directly and fetches rows in less time than getting all and removing in subsequent T/R.
+
+If you use overrides use HINTS as possible like full scan or parellel to retrive the result faster from a heavy tables.
+
+Target:
+
+For target if possible use BULK and disable indexes and enable/create them once data loading completes.
+If your maping has updating in target and your target doesnot have primary key defined you define in Informatica atleast it will speed up the 
+Updating process.
+
+Removing Mapping bottle necks:
+
+Use Sorter before Aggregator/Joiner transformation for better performance. And dont forget to check the SORTED INPUT check box.
+To improve performance for an unsorted Joiner transformation, use the source with fewer rows as the master source. 
+To improve performance for a sorted Joiner transformation, use the source with fewer duplicate key values as the master. 
+Instead of using heavy table as lookup bring it as source and use joiner to achieve the result. When lookup has multiple conditions use "="
+first and mostly the efficient join condition should be first.
+
+Avoid using many string functions as string functions use more resources than non string functions.Avoid using multiple IIF conditions rather
+optimize the expression. Put the ports in proper order IN,I/O ,VAR, OUT for better readability and proper results.
+
+ 
+
+Session bottle necks:
+
+Small cache size, low buffer memory, and small commit intervals can cause session bottlenecks.
+Increase commit interval , and change override tracing Normal from None and cache sizes AUTO can improve the performance significantly.
+Avoid heavy files in ftp location ..instead bring it to Infa server location and remove after loads to protect the confidentiality etc..
+
+ 
+
+System Bottlenecks:
+
+Some times System also causes delays. If the CPU usage is more than 80% Consider changing the load or using a grid to distribute tasks to different nodes.
+If you cannot reduce the load, consider adding more processors.
+
+section 3
+___________
+
+
+1. Reduce the number of transformations. There is always overhead involved in moving data between transformations.
+2. Consider more shared memory for large number of transformations. Session shared memory between 12MB and 40MB should suffice.
+3. Calculate once, use many times.
+>>Avoid calculating or testing the same value over and over.
+>>Calculate it once in an expression, and set a True/False flag.
+>>Within an expression, use variable ports to calculate a value than can be used multiple times within that transformation.
+>>Delete unnecessary links between transformations to minimize the amount of data moved, particularly in the Source Qualifier.
+>>This is also helpful for maintenance. If a transformation needs to be reconnected, it is best to only have necessary ports set as input and output to reconnect.
+>>In lookup transformations, change unused ports to be neither input nor output. This makes the transformations cleaner looking. 
+It also makes the generated SQL override as small as possible, which cuts down on the amount of cache necessary and thereby improves performance.
+>>The engine automatically converts compatible types.Sometimes data conversion is excessive. 
+Data types are automatically converted when types are different between connected ports. 
+Minimize data type changes between transformations by planning data flow prior to developing the mapping.
+>>Plan for reusable transformations upfront.
+>>Use variables. Use both mapping variables as well as ports that are variables. Variable ports are especially beneficial when they can be used to calculate a complex expression 
+or perform a disconnected lookup call only once instead of multiple times
+>>Use mapplets to encapsulate multiple reusable transformations.
+>>Use mapplets to leverage the work of critical developers and minimize mistakes when performing similar functions.
+>>Reduce the number of non-essential records that are passed through the entire mapping.
+>>Use active transformations that reduce the number of records as early in the mapping as possible (i.e., placing filters, aggregators as close to source as possible).
+>>Select appropriate driving/master table while using joins. The table with the lesser number of rows should be the driving/master table for a faster join.
+>>Redesign mappings to utilize one Source Qualifier to populate multiple targets. This way the server reads this source only once. 
+If you have different Source Qualifiers for the same source (e.g., one for delete and one for update/insert), the server reads the source for each Source Qualifier.
+>>Remove or reduce field-level stored procedures.
+If you use field-level stored procedures, the PowerCenter server has to make a call to that stored procedure for every row, slowing performance.
+4. Only connect what is used.
+5. Watch the data types.
+6. Facilitate reuse.
+7. Only manipulate data that needs to be moved and transformed.
+8. Utilize single-pass reads.
+9. Sort the input data before passing to Joiner and Aggregate transformation.
+10. In Lookup using customize query instead of default query. (Use '--' to overwrite lookup default order by clause).
+11. Avoid using un-neccessary columns/port in sql query.
+12. Filter un-neccessary data as closer to the source qualifier. (In case of Relational database include filter condition to the sql query).
+13. In Joiner consider lesser value of data as Master Table.
+14. In-case of mapping partition place aggregate transformation before the partition point.
+15. Use Router instead of having multiple Filter transformations.
+
+5. Partitioning in Informatica
+
+https://dwbi.org/etl/informatica/161-implementing-informatica-partitions
+
+6. PushDown Optimization in Informatica
+
+https://dwbi.org/etl/informatica/162-pushdown-optimization-in-informatica
+
+7.Active and Passive Transformations
+
+https://www.edureka.co/blog/informatica-transformations/
+
+
+

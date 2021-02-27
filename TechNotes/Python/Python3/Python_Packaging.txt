@@ -1,0 +1,100 @@
+Packaging in Python
+*********************
+pipenv
+******
+1. pipenev install requests --> this will create a virtual environment  and install the package automatically
+this will generate two files
+Pipfile and Pipfile.lock
+
+Pipfile sample is as below
+
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+request = "*"
+
+[requires]
+python_version = "3.7"
+
+Pipfile.lock sample is as below
+
+
+Pipfile.lock contains hashes and dependencies
+
+
+2. pipenv shell --> to activate the virtual environment
+
+Now if you launch and check your python executable, it will be poiting to the exe
+PS A:\mygit\envs>  python                                                                                                                                                                                         Python 3.7.0b2 (v3.7.0b2:b0ef5c979b, Feb 28 2018, 02:24:20) [MSC v.1912 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import sys
+>>> sys.executable
+'C:\\Users\\wwwpa\\.virtualenvs\\envs-JTXjyPn2\\Scripts\\python.exe'
+>>>
+
+3. pipenv --rm  --> this will remove the existing virtual environment
+
+4.pipenv run python  will point the python executable to the virtual environment created (pipenv run python <.py file> will execute the python code using executables
+in virtual environment)
+5.pipenv lock -r --> this will give all dependencies installed on project with versions. This we can redirect to requirements.txt file
+6.pipenv install -r requirements.txt file --> this will install all the dependencies in requirements.txt file on current virtual environment
+7. If you want to install a package only for dev environment (development purpose in the same virtual environment), then you can do as below
+
+pipenv install pytest --dev
+
+if we see pipfile here , we can see pytest package has been added in seperate section 
+
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+
+[packages]
+requests = "*"
+
+[requires]
+python_version = "3.6"
+
+
+8.pipenev uninstall requests --> this will remove requests package from virtual environment as well as from pipfile and pipfile.lock
+
+9. if we want to use a different version of python , then we need to just edit pipfile python_version = "3.6" to python_version = "3.7"
+and then we need to recreate the virtual environment as below
+pipenev --python 3.7
+
+10. after removing virtual env using pipenv --rm  , we will still be having our pipfile and pipfile.lock with us . 
+Now if we say 
+pipenv install --> this will recreate the virtual environment with specifications in the pipfile
+
+11. pipenv --venv will give you the path to the environment
+
+12. pipenv check --> this will check the saftey rquirements of the packages
+
+13.pipenv graph --> this will give you the dependency graph of packages if any
+
+14. Once you are done with the development , you can update the pipfile.lock before migration using
+pipenv lock 
+you can migrate the pipfile.lock to prod and create the prod virtual environment as :
+pip install --ignor-pipfile
+
+15.if you want to set the enviroment variables sepcific to a project , we can create a .env file and add our variables into it
+
+
+
+Use Pyinstaller (or similar package manager tools) to bundle python project to .exe and migrate to another enviroment.
+Use NSIS (Nullsoft scriptable Install system) to bundle all the dependencies to single exe file	
+
+
+
+
+
+
+

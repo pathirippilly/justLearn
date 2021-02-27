@@ -1,0 +1,46 @@
+setting up pyspark in Ubuntu
+******************************
+update the cache:
+sudo apt-get update
+
+install java:
+
+sudo apt install openjdk-8-jre-headless
+
+install scala:
+sudo apt-get install scala
+
+sudo apt install python3-pip
+
+install py4j:
+pip3 install py4j
+
+install jupyter:
+
+sudo apt install jupyter
+sudo apt install jupyter-notebook
+
+install spark 2.3.1:
+Download from below link:
+
+https://www.apache.org/dyn/closer.lua/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz
+copy from downloads to your home directory
+
+Then in shell go to your home directory and extarct it as follows:
+sudo tar -zxvf spark-2.3.1-bin-hadoop2.7.tgz OR righ click from window itself and extract 
+
+add below lines to bottom of your ~/.bashrc
+
+export SPARK_HOME='/home/pathirippilly/spark-2.3.1-bin-hadoop2.7'
+export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
+export PYSPARK_DRIVER_PYTHON='jupyter'
+export PYSPARK_DRIVER_PYTHON_OPTS='notebook'
+export PYSPARK_PYTHONPATH=python3
+export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk-amd64"
+export PATH=$SPARK_HOME:$PATH:~/.local/bin:$JAVA_HOME/bin:$JAVA_HOME/jre/bin
+
+
+
+
+
+

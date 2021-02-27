@@ -1,0 +1,48 @@
+Spark Streaming : Get Dept wise traffic every 30 seconds
+************************************************************
+Read Data from retail_db logs
+Compute Department traffic every 30 secods
+Save output to HDFS
+
+Solution:
+Use spark streaming 
+Puiblish messages from retail_db logs to netcat
+Create Dstream
+Process and Save output
+
+code:
+
+from pyspark import SparkConf,SparkContext
+from pyspark.streaming import StreamingContext
+import sys
+conf = SparkConf().setAppName("Streaming Department Message Count").setMaster("yarn-client")
+sc = SparkContext(conf=conf)
+ssc = StreamingContext(sc,30)
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+messages=ssc.SocketTextStream(host,port)
+dept_msgs_count =  messages. \
+filter(lambda msg : msg.split(" ")[6].split("/")[1]=='department'). \
+map(lambda msg:  (msg.split(" ")[6].split("/")[2],1) ).reduceByKey(lambda x,y : x+y)
+
+outputprefix = sys.argv[3]
+dept_msgs_count.saveAsTextFiles(outputprefix)
+ssc.start()
+ssc.awaitTermination()
+
+
+
+running the code:
+
+spark-submit \
+--master yarn \
+--conf spark.ui.port=12890 \
+src/main/python/StreamingDeptMessageCount.py \
+gw03.itversity.com 19999 /user/pathirippilly/spark_streaming_jobs/output/streamingdeptcount/cnt
+
+directories prefixed with 'cnt' will be created for every 30 seconds and progressive count will be stored in each directories.
+
+
+

@@ -1,0 +1,42 @@
+1. if you are creating a table of columns with some precision , say varchar(20) or char(10). And if you try to insert a value which is greater than this precision,
+	still the value will be getting inserted , but will be trimmed to the precision.
+2.if in substr(<input string>,p,n) , even if you mention any p or n (integer only) which is not relevant in context of position or lentgh , it won't throw error but 
+will return an empty string
+3. index(split(<column>,<delimitter>),n), here if n>=length of the list, then it will return  NULL
+4. To use position in order by or group by , you need to update hive.groupby.orderby.position.alias=True first in Hive
+5. While running a Hive QL we need to be sure about following
+
+In order to change the average load for a reducer (in bytes):
+  set hive.exec.reducers.bytes.per.reducer=<number>
+In order to limit the maximum number of reducers:
+  set hive.exec.reducers.max=<number>
+In order to set a constant number of reducers:
+  set mapreduce.job.reduces=<number>
+  
+ 6. How to make hive SQLs faster 
+ 
+ https://hortonworks.com/blog/5-ways-make-hive-queries-run-faster/
+ 
+ 7. set hive.enforce.bucketing=true : ensures buckets are populated according to the table definition
+ 
+ 8. Minimally, these configuration parameters must be set appropriately to turn on transaction support in Hive:
+
+Client Side
+
+hive.support.concurrency – true
+hive.enforce.bucketing – true (Not required as of Hive 2.0)
+hive.exec.dynamic.partition.mode – nonstrict
+hive.txn.manager – org.apache.hadoop.hive.ql.lockmgr.DbTxnManager
+Server Side (Metastore)
+
+hive.compactor.initiator.on – true (See table below for more details)
+hive.compactor.worker.threads – a positive number on at least one instance of the Thrift metastore service
+
+For more information please visit :
+https://cwiki.apache.org/confluence/display/Hive/Hive+Transactions#HiveTransactions-Configuration
+https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/understanding-administering-compactions.html
+https://hortonworks.com/tutorial/using-hive-acid-transactions-to-insert-update-and-delete-data/
+https://cwiki.apache.org/confluence/display/Hive/Hive+Transactions
+https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DML#LanguageManualDML-Delete
+ 
+ 

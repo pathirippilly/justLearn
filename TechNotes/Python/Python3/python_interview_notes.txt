@@ -1,0 +1,799 @@
+python notes for preparation
+******************************
+
+DATA TYPES
+************
+Text Type:	str
+Numeric Types:	int, float, complex
+Sequence Types:	list, tuple, range
+Mapping Type:	dict
+Set Types:	set, frozenset
+Boolean Type:	bool
+Binary Types:	bytes, bytearray, memoryview
+
+>>>String
+1. Strings are immutable.You can not assign a value to a string
+2.indexing and slicing are permissible
+
+3.some methods:
+capitalize()	Converts the first character to upper case
+count()	Returns the number of times a specified value occurs in a string
+find()	Searches the string for a specified value and returns the position of where it was found
+format()	Formats specified values in a string
+index()	Searches the string for a specified value and returns the position of where it was found
+isalnum()	Returns True if all characters in the string are alphanumeric
+isalpha()	Returns True if all characters in the string are in the alphabet
+isdecimal()	Returns True if all characters in the string are decimals
+isdigit()	Returns True if all characters in the string are digits
+isidentifier()	Returns True if the string is an identifier
+islower()	Returns True if all characters in the string are lower case
+isnumeric()	Returns True if all characters in the string are numeric
+isprintable()	Returns True if all characters in the string are printable
+isspace()	Returns True if all characters in the string are whitespaces
+istitle()	Returns True if the string follows the rules of a title
+isupper()	Returns True if all characters in the string are upper case
+join()	Joins the elements of an iterable to the end of the string
+lower()	Converts a string into lower case
+upper() Converts a string into upper case
+
+>>list 
+1.List is a collection which is ordered and changeable. Allows duplicate members.
+
+2.functions/methods:
+len() --> To determine how many items a list has
+
+append() --> To add an item to the end of the list
+
+insert() --> To add an item at the specified index
+thislist = ["apple", "banana", "cherry"]
+thislist.insert(1, "orange")
+remove() --> method removes the specified item (first occurence)
+pop() -->  method removes the specified index, (or the last item if index is not specified)
+del() --> removes the specified index or entire list
+thislist = ["apple", "banana", "cherry"]
+del thislist[0]
+del thislist
+clear() --> empties the list
+extend() --> which purpose is to add elements from one list to another list
+
+>>Tuple
+1.Tuple is a collection which is ordered and unchangeable. Allows duplicate members
+
+2.functions/methods:
+To join two or more tuples you can use the + operator
+count()	Returns the number of times a specified value occurs in a tuple
+index()	Searches the tuple for a specified value and returns the position of where it was found
+
+>>SET
+1. Set is a collection which is unordered and unindexed. No duplicate members.
+
+2.functions/methods:
+To add one item to a set use the add() method.
+
+To add more than one item to a set use the update() method.
+To determine how many items a set has, use the len() method.
+To remove an item in a set, use the remove(), or the discard() : If the item to remove does not exist, remove() will raise an error while discard() not.
+The clear() method empties the set:
+The del keyword will delete the set completely:
+You can use the union() method that returns a new set containing all items from both sets, or the update() method that inserts all the items from one set into another
+difference()	Returns a set containing the difference between two or more sets
+intersection()	Returns a set, that is the intersection of two other sets
+
+>>DICTIONARY
+
+1.Dictionary is a collection which is unordered, changeable and indexed. No duplicate members.
+
+2.functions/methods:
+You can also use the values() method to return values of a dictionary:
+
+for x in thisdict.values():
+  print(x)
+  
+Loop through both keys and values, by using the items() method:
+
+for x, y in thisdict.items():
+  print(x, y)
+  
+To determine how many items (key-value pairs) a dictionary has, use the len() function
+
+Adding an item to the dictionary is done by using a new index key and assigning a value to it
+
+The pop() method removes the item with the specified key name:
+
+thisdict = {
+  "brand": "Ford",
+  "model": "Mustang",
+  "year": 1964
+}
+thisdict.pop("model")
+print(thisdict)
+
+The popitem() method removes the last inserted item (in versions before 3.7, a random item is removed instead):
+The del keyword removes the item with the specified key name or entire disctionary
+The clear() method empties the dictionary
+
+DEEP COPY v/s SHALLOW COPY
+***************************
+1.
+l1=[1,2,3]
+l2=l1
+
+This is not copying l1 to l2. Its only creating a label named l2 in the namespace of stack memory which refers the same memory where l1 is pointed to.
+So what ever changes you do in that memory space will be affected automatically to both l1 and l2
+
+2. 
+A) A shallow copy constructs a new compound object and then (to the extent possible) inserts references into it to the objects found in the original
+B) A deep copy constructs a new compound object and then, recursively, inserts copies into it of the objects found in the original.
+
+3. Shallow Copy
+
+shallow copy can by done by built in .copy() method or copy() function from copy module
+l1=[1,2,3,[1,2,3]]
+l2=l1.copy() (or l2=copy.copy(l1))
+any changes to outer list will not be affected directly to l2 here. But if you make change to inner list , such as,
+l1[3][0]=5
+This will be reflected directly on l2
+
+4.Deep Copy
+
+l2=copy.deepcopy(l1)
+any changes to l1 will not be reflected in l2
+
+lambda functions in Python
+****************************
+1. A lambda function is a small anonymous function.
+
+2. A lambda function can take any number of arguments, but can only have one expression.
+3. Use case : If you want to define and call a function only once , that too have only one expression , in such scenarios its 
+very convenient to use lambda functions that regular functions. This can be defined and called at the same line, no need to define it separately
+with a name. 
+This is really handy on higher order functions and some times in clusre kind of scenarios where we need to return a function as an output to a functuon
+
+
+Iterators
+***************
+
+https://www.programiz.com/python-programming/iterator
+
+Iterator in Python is simply an object that can be iterated upon. An object which will return data, one element at a time.
+
+Technically speaking, Python iterator object must implement two special methods, __iter__() and __next__(), collectively called the iterator protocol.
+
+An object is called iterable if we can get an iterator from it. Most of built-in containers in Python like: list, tuple, string etc. are iterables.
+
+The iter() function (which in turn calls the __iter__() method) returns an iterator from them.
+
+We use the next() function to manually iterate through all the items of an iterator. When we reach the end and there is no more data to be returned, it will raise StopIteration
+
+A more elegant way of automatically iterating is by using the for loop. Using this, we can iterate over any object that can return an iterator, for example list, string, file etc.
+
+
+As we see in the above example, the for loop was able to iterate automatically through the list.
+
+In fact the for loop can iterate over any iterable. Let's take a closer look at how the for loop is actually implemented in Python.
+
+for element in iterable:
+    # do something with element
+	
+Is actually implemented as.
+
+# create an iterator object from that iterable
+iter_obj = iter(iterable)
+
+# infinite loop
+while True:
+    try:
+        # get the next item
+        element = next(iter_obj)
+        # do something with element
+    except StopIteration:
+        # if StopIteration is raised, break from loop
+        break
+		
+Here, we show an example that will give us next power of 2 in each iteration. Power exponent starts from zero up to a user set number.
+
+class PowTwo:
+    """Class to implement an iterator
+    of powers of two"""
+
+    def __init__(self, max = 0):
+        self.max = max
+
+    def __iter__(self):
+        self.n = 0
+        return self
+
+    def __next__(self):
+        if self.n <= self.max:
+            result = 2 ** self.n
+            self.n += 1
+            return result
+        else:
+            raise StopIteration		
+			
+fibonacci series implementation using iterator:
+class fibonacci:
+ def __init__(self,outbound=1):
+  self.outbound=outbound
+ def __iter__(self):
+  self.n=1
+  self.prev=1
+  self.current=1
+  return self
+ def __next__(self):
+  if self.n<=self.outbound:
+   if self.outbound==0:
+    raise StopIteration
+   elif self.n<=2:
+    self.n=self.n+1
+    return self.current
+   else:
+    self.out = self.prev + self.current
+    self.prev,self.current=self.current,self.out
+    self.n=self.n+1
+    return self.out
+  else:
+   raise StopIteration
+ 
+
+
+Generators
+************
+https://www.programiz.com/python-programming/generator
+
+There is a lot of work in building an iterator in Python. We have to implement a class with __iter__() and __next__() method, keep track of internal states, and raise StopIteration when there are no values to be returned.
+
+This is both lengthy and counterintuitive. Generator comes to the rescue in such situations.
+
+Python generators are a simple way of creating iterators. All the work we mentioned above are automatically handled by generators in Python.
+
+Simply speaking, a generator is a function that returns an object (iterator) which we can iterate over (one value at a time).
+
+
+It is fairly simple to create a generator in Python. It is as easy as defining a normal function, but with a yield statement instead of a return statement.
+
+If a function contains at least one yield statement (it may contain other yield or return statements), it becomes a generator function. Both yield and return will return some value from a function.
+
+The difference is that while a return statement terminates a function entirely, yield statement pauses the function saving all its states and later continues from there on successive calls.
+
+
+
+Generator function contains one or more yield statements.
+When called, it returns an object (iterator) but does not start execution immediately.
+Methods like __iter__() and __next__() are implemented automatically. So we can iterate through the items using next().
+Once the function yields, the function is paused and the control is transferred to the caller.
+Local variables and their states are remembered between successive calls.
+Finally, when the function terminates, StopIteration is raised automatically on further calls.
+
+Unlike normal functions, the local variables are not destroyed when the function yields. Furthermore, the generator object can be iterated only once.
+
+
+
+Closure
+**********
+https://www.programiz.com/python-programming/closure
+
+Python closures. A closure is a nested function which has access to a free variable from an enclosing function that has finished its execution. Three characteristics of a Python closure are: it is a nested function. it has access to a free variable in outer scope.
+
+When to use closures?
+So what are closures good for?
+
+Closures can avoid the use of global values and provides some form of data hiding. It can also provide an object oriented solution to the problem.
+
+When there are few methods (one method in most cases) to be implemented in a class, closures can provide an alternate and more elegant solutions. But when the number of attributes and methods get larger, better implement a class.
+
+eg:
+
+def make_multiplier_of(n):
+    def multiplier(x):
+        return x * n
+    return multiplier
+
+
+
+
+
+
+Decorators
+************
+https://www.programiz.com/python-programming/decorator
+
+
+Functions and methods are called callable as they can be called.
+
+In fact, any object which implements the special method __call__() is termed callable. So, in the most basic sense, a decorator is a callable that returns a callable.
+
+Basically, a decorator takes in a function, adds some functionality and returns it.
+
+A decorator in Python is any callable Python object that is used to modify a function or a class. A reference to a function "func" or a class "C" is passed to a decorator and the decorator returns a modified function or clas
+
+eg:
+
+def works_for_all(func):
+    def inner(*args, **kwargs):
+        print("I can decorate any function")
+        return func(*args, **kwargs)
+    return inner
+
+
+
+recursion
+**********
+
+
+In a typical recursive function, we usually make the recursive calls first, and then take the return value of the recursive call to calculate the result. Therefore, we only get the final result after all the recursive calls have returned some value. But in a tail recursive function, the various calculations and statements are performed first and the recursive call to the function is made after that. By doing this, we pass the results of the current step to the next recursive call to the function. Hence, the last statement in a Tail recursive function is the recursive call to the function.
+This means that when we perform the next recursive call to the function, the current stack frame (occupied by the current function call) is not needed anymore. This allows us to optimize the code. We Simply reuse the current stack frame for the next recursive step and repeat this process for all the other function calls.
+
+Using regular recursion, each recursive call pushes another entry onto the call stack. When the functions return, they are popped from the stack. In the case of tail recursion, we can optimize it so that only one stack entry is used for all the recursive calls of the function. This means that even on large inputs, there can be no stack overflow. This is called Tail recursion optimization.
+
+Languages such as lisp and c/c++ have this sort of optimization. But, the Python interpreter doesn’t perform tail recursion optimization. Due to this, the recursion limit of python is usually set to a small value (approx, 10^4). This means that when you provide a large input to the recursive function, you will get an error. This is done to avoid a stack overflow. The Python interpreter limits the recursion limit so that infinite recursions are avoided.
+
+
+The “sys” module in Python provides a function called setrecursionlimit() to modify the recursion limit in Python
+
+sys.getrecursionlimit() --> this will give the current recursion limit
+sys.setrecursionlimit(10**6)  --> this will set the recursion limit
+
+Set the maximum depth of the Python interpreter stack to limit. This limit prevents infinite recursion from causing an overflow of the C stack and crashing Python.
+
+The highest possible limit is platform-dependent. A user may need to set the limit higher when she has a program that requires deep recursion and a platform that supports a higher limit. This should be done with care, because a too-high limit can lead to a crash.
+
+
+
+
+ 
+Named Tuples
+******************
+
+Counters
+********
+
+Deque
+******
+
+File Handling
+*************
+
+datetime module
+****************
+
+
+CSV READER
+**********
+
+JSON library
+*************
+
+OS Librarry
+***********
+
+sys library
+************
+
+
+
+re module
+***********
+
+
+
+numpy
+******
+
+
+pandas
+********
+refer=https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_json.html
+
+1. reading a file and creating a dataframe:
+
+a. CSV
+
+
+pandas.read_csv
+eg:
+df=pd.read_csv(r"A:\lab\data\Corey_Schafer\stackoverflow_dev_survey\developer_survey_2019\survey_results_public.csv",index_col="Respondent",sep=",")
+
+Parameters
+filepath_or_bufferstr, path object or file-like object
+Any valid string path is acceptable. The string could be a URL. Valid URL schemes include http, ftp, s3, and file. For file URLs, a host is expected. A local file could be: file://localhost/path/to/table.csv.
+
+If you want to pass in a path object, pandas accepts any os.PathLike.
+
+By file-like object, we refer to objects with a read() method, such as a file handler (e.g. via builtin open function) or StringIO.
+
+sepstr, default ‘,’
+Delimiter to use. If sep is None, the C engine cannot automatically detect the separator, but the Python parsing engine can, meaning the latter will be used and automatically detect the separator by Python’s builtin sniffer tool, csv.Sniffer. In addition, separators longer than 1 character and different from '\s+' will be interpreted as regular expressions and will also force the use of the Python parsing engine. Note that regex delimiters are prone to ignoring quoted data. Regex example: '\r\t'.
+
+delimiterstr, default None
+Alias for sep.
+
+headerint, list of int, default ‘infer’
+Row number(s) to use as the column names, and the start of the data. Default behavior is to infer the column names: if no names are passed the behavior is identical to header=0 and column names are inferred from the first line of the file, if column names are passed explicitly then the behavior is identical to header=None. Explicitly pass header=0 to be able to replace existing names. The header can be a list of integers that specify row locations for a multi-index on the columns e.g. [0,1,3]. Intervening rows that are not specified will be skipped (e.g. 2 in this example is skipped). Note that this parameter ignores commented lines and empty lines if skip_blank_lines=True, so header=0 denotes the first line of data rather than the first line of the file.
+
+namesarray-like, optional
+List of column names to use. If the file contains a header row, then you should explicitly pass header=0 to override the column names. Duplicates in this list are not allowed.
+
+index_colint, str, sequence of int / str, or False, default None
+Column(s) to use as the row labels of the DataFrame, either given as string name or column index. If a sequence of int / str is given, a MultiIndex is used.
+
+Note: index_col=False can be used to force pandas to not use the first column as the index, e.g. when you have a malformed file with delimiters at the end of each line.
+
+
+
+b.pandas.read_json
+pandas.read_json(path_or_buf=None, orient=None, typ='frame', dtype=None, convert_axes=None, convert_dates=True, keep_default_dates=True, numpy=False, precise_float=False, date_unit=None, encoding=None, lines=False, chunksize=None, compression='infer')
+
+refer=https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_json.html
+
+
+2.Info on a dataframe
+
+df.shape #returns a tuple containing number of rows and columns
+df.info() # returns no of rows,columns and data types of columns
+df.head(10) #gives first 10 rows,default is 5
+df.tail(10) #gives last 10 rows,default is 5
+df.columns # this will return the list of columns
+df.columns.sort_values() 
+
+3.Converting the type of a column in pandas 
+refer=https://stackoverflow.com/questions/15891038/change-data-type-of-columns-in-pandas
+
+we have three main options for converting types in pandas:
+
+to_numeric() - provides functionality to safely convert non-numeric types (e.g. strings) to a suitable numeric type. (See also to_datetime() and to_timedelta().)
+
+astype() - convert (almost) any type to (almost) any other type (even if it's not necessarily sensible to do so). Also allows you to convert to categorial types (very useful).
+
+infer_objects() - a utility method to convert object columns holding Python objects to a pandas type if possible.
+ eg using astype():
+ # convert all DataFrame columns to the int64 dtype
+df = df.astype(int)
+
+# convert column "a" to int64 dtype and "b" to complex type
+df = df.astype({"a": int, "b": complex})
+
+# convert Series to float16 type
+s = s.astype(np.float16)
+
+# convert Series to Python strings
+s = s.astype(str)
+
+# convert Series to categorical type - see docs for more details
+s = s.astype('category')
+
+4. traversing through a dataframe
+
+#Creating DF out of dictionary using pd.Dataframe()
+d={"first":["Corey","Jane","John"],
+  "last":["Schafer","Doe","Doe"],
+  "email":["CoreyMSchafer@gmail.com","JaneDoe@gmail.com","JohnDoe@gmail.com"]}
+  
+  
+df_dict=pd.DataFrame(d)
+
+df_dict["email"] # This returns email column alone. Output is of pandas series type not DF. df_dict[["email"]] will give a DF
+df_dict[["first","email"]]  # This way we can get more than one columns . Now this becomes a dataframe
+df_dict.iloc[0]  # This returns first row alone. Output is of pandas series type not DF. iloc access by integer location
+df_dict.iloc[[0,1]] # This way we can get more than one rows . Now this becomes a dataframe
+df_dict.iloc[[0,1],[1,2]]  # This way we can get filter rows using integer locations of columns
+df_dict.loc[[0,1],"email"] # This returns 1st and second row of email column alone. Output is of pandas series type not DF
+df_dict.loc[[0,1],["last","email"]] # This returns 1st and second row of email and 'last' column alone. Output is a  DF
+#df_dict.loc[0:2,"first":"email"]] #This way you can slice the columns and rows in loc-.Unlike list slicing , upper bound is inclusive here in .loc[]
+df_dict.iloc[0:2,0:2]  # using iloc , you can slice both rows and columns as shown . But upper bound is exlusive here
+
+
+5. indexes
+
+df_dict.set_index("email",inplace=True) # set index column as email. its not inplace by default
+df_dict.index # this will give index column and its distinct values
+#df_dict.reset_index(drop=True, inplace=True) # this will drop index inplace. Drop will be True by default
+df_schema.sort_index(ascending=False) # This will sort the Index in descending order. inplace=False by default
+
+6. Filtering
+
+df_dict["last"] == "Doe" # This will return a pandas series with boolean values for each index column values
+df_dict[df_dict["last"] == "Doe"]["first"] #We can pass the above series in to the DF for applying the filter
+df_dict.loc[df_dict["last"] == "Doe",["first"]] # same filtering can be done using .loc[] 
+
+#handling multiple filter conditions using & ,  | logical operators
+
+filt=(df_dict["last"] == "Doe") & (df_dict["first"] == "John")
+df_dict[filt][["first"]].columns
+df_dict.loc[filt]
+
+
+countries=["United States","India","United Kingdom","Germany","Canada"]
+filt1=(df["Country"].isin(countries)) & (df["ConvertedComp"] > 10000)
+filt2=df["LanguageWorkedWith"].str.contains("Python",na=False) # this is similar to like condition
+df[filt1 |  filt2][Respondent]
+
+7. Updating Rows and Columns
+
+a. renaming columns
+df_dict.columns=["first_name","last_name","email_id"] # By assigning a list like this to df.columns , you can rename the columns 
+df.columns=[x.upper() for x in df.columns] # making all column names to uppercase
+df.columns=df.columns.str.replace(" ","_") # replacing space character in column names with _
+df.rename({"first_name":"first","last_name:last"},inplace=True) #rename selective columns inplace
+df.loc[2]=["john","smith","john_smith@email.com"] # Adding a new row
+df.loc[2,["last","ëmail"]]=["smith1","john_smith1@email.com"]  #updating a  row , but for selective columns
+
+
+
+OOP basics
+**********
+
+class Employee:
+    raise_percentage = 1.05
+    def __init__(self,first,last,email,salary):
+        self.first = first
+        self.last = last
+        self.email = email
+        self.salary = salary
+        if self.salary<10000:
+            self.grade="C"
+        elif self.salary<20000:
+            self.grade = "B"
+        else:
+            self.grade = "A"
+    def apply_raise(self):
+        self.salary=self.salary*self.raise_percentage
+    @classmethod
+    def set_raise_percentage(cls,percentage):
+        cls.raise_percentage=percentage
+    @classmethod
+    def from_string(cls,string):
+        first,last,email,salary=string.split("-")
+        return cls(first,last,email,int(salary))
+    def __str__(self):
+       return f"{self.first} {self.last}"
+    def __add__(self, other):
+        return self.salary + other.salary
+
+1. 'class' keyword is used to create a class 
+
+2. __init__(slef,*args) is the constructer for a class in python
+
+3. overriding __call__ method makes a function callable 
+4. overriding __str__ can make the object return what ever we want
+5. we can overriding other inbuilt methods such as __add__ , __radd__ etc to make the functionalities what ever way we want
+6. Variables which are defined with in __init__ method are instrance variables and variables which are common to class are class varaibles
+In above example raise_percentage is a calss variable. Eventhough its a class variable , this can be accessed via both class and instance
+i.e, Employe.raise_percentage as well as self.raise_percentage , both are valid. This because , instance can access variables in local scope as 
+well as enclosed scope	 
+7.reguar methods always have first argument as 'self' while class methods always have first argument as class. We need to pass a decorator @classmethod
+for creating class methods. set_raise_percentage and from_string are class methods.
+From straing is an alternative constructer for creating an object of Employee class
+emp = Employee.from_string("rick-siegal-rsiegal@abc.com-25000")
+
+8. There are static methods also . These methods does not access instance or class anywhere with in the function , but have some logics to do.
+@staticmethod is the decorator for static methods
+
+9.Below is an example of a subclass with single inheritence
+
+class deveoper(Employee):
+    raise_percentage = 1.2
+    def __init__(self,first,last,email,salary,prog_lang):
+        super().__init__(first,last,email,salary)
+        self.prog_lang=prog_lang
+10. isinstance(object,class) will return true if object is an instance of the class mentioned
+11. issubclass(subclass_name,superclass_name) will return true if subclass_name  is a subclass of superclass_name
+
+12.__str__ vs __repr__ :
+
+The official Python documentation says __repr__ is used to find the “official” string representation of an object and __str__ is used to find the “informal” string representation of an object.statement and str() built-in function uses __str__ to display the string representation of the object while the repr() built-in function uses __repr__ to display the object. Let us take an example to understand what the two methods actually do.
+Let us create a datetime object:
+
+>>> import datetime
+>>> today = datetime.datetime.now()
+When I use the built-in function str() to display today:
+>>> str(today)
+'2018-01-12 09:21:58.130922'
+We see that the date was displayed as a string in such a way that the user can understand the date and time. Now lets see when we use the built-in function repr():
+
+>>> repr(today)
+'datetime.datetime(2018, 1, 12, 9, 21, 58, 130922)'
+We see that this also returned a string but the string was the “official” representation of a datetime object which means that this “official” string representation can reconstruct the object:
+
+>>> eval('datetime.datetime(2018, 1, 12, 9, 21, 58, 130922)')
+datetime.datetime(2018, 1, 12, 9, 21, 58, 130922)
+The eval() built-in function accepts a string and converts it to a datetime object.
+
+Thus in a general every class we code must have a __repr__ and if you think it would be useful to have a string version of the object, as in the case of datetime create a __str__ function.
+
+13.getter , setter and deleter using @property
+
+Consider below class :
+class Employee:
+    def __init__(self,first,last):
+        self.first=first
+        self.last=last
+        self.email=f"{self.last}.{self.first}@email.com"
+    def fullname(self):
+        return f"{self.first} {self.last}"
+emp3=Employee('shukur','ibrahim')
+print(emp3.fullname())
+print(emp3.email)
+
+
+lets say emp3  changed the first name
+emp3.first="hassan"
+
+since fullname() is  a method , this change will reflect in full name . But , it won't reflect in email id, since 
+this time __init__ method didn't run 
+
+
+so to solve such problems. We need to use getters and setters
+Python programming provides us with a built-in @property decorator which makes usage of getter and setters much easier in Object-Oriented Programming
+
+lets re define the class in this way 
+
+class Employee:
+    def __init__(self,first,last):
+        self.first=first
+        self.last=last
+    @property
+    def fullname(self):
+        return f"{self.first} {self.last}"
+    @property
+    def email(self):
+        return f"{self.last}.{self.first}@email.com"
+    @fullname.setter
+    def fullname(self,fname):
+        first, last = fname.split(" ")
+        self.first = first
+        self.last = last
+
+    @fullname.deleter
+    def fullname(self):
+        print(f"{self.fullname} is deleted" )
+        self.first = None
+        self.last = None
+
+
+14. using  __slots__ and assigning it with a tuple of all attributes that are valid for that class, we won't be able to add another 
+attribute to the object on the fly. It will trow AttributeError
+
+15. To create weak references in python, we need to use the weakref module. The weakref is not sufficient to keep the object alive. A basic use of the weak reference is to implement cache or mappings for a large object.
+Not all objects can be weakly referenced. Some built-in types like tuple or int, do not support weak reference. There are some classes and methods related to weak reference.
+
+16. GIL --> Global interpretor lock will allow only one thread to run at a time 
+
+
+
+emp3=Employee('shukur','ibrahim')
+emp3.first="hassan"
+print(emp3.fullname) # fullname() will be converted into an attribute by @property
+print(emp3.email) # email() will be converted into an attribute by @property
+emp3.fullname="abdul rahman" # this will utilises the setter @fullname.setter
+print(emp3.fullname)
+print(emp3.email)
+del emp3.fullname # this will utilises the setter @fullname.deleter
+
+
+
+
+
+logging module
+**************
+
+
+
+try and except
+**************
+
+
+
+packaging and deploy
+************************
+
+
+pipenv:
+
+1. pipenev install requests --> this will create a virtual environment  and install the package automatically
+this will generate two files
+Pipfile and Pipfile.lock
+
+Pipfile sample is as below
+
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+request = "*"
+
+[requires]
+python_version = "3.7"
+
+Pipfile.lock sample is as below
+
+
+Pipfile.lock contains hashes and dependencies
+
+
+2. pipenv shell --> to activate the virtual environment
+
+Now if you launch and check your python executable, it will be poiting to the exe
+PS A:\mygit\envs>  python                                                                                                                                                                                         Python 3.7.0b2 (v3.7.0b2:b0ef5c979b, Feb 28 2018, 02:24:20) [MSC v.1912 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import sys
+>>> sys.executable
+'C:\\Users\\wwwpa\\.virtualenvs\\envs-JTXjyPn2\\Scripts\\python.exe'
+>>>
+
+3. pipenv --rm  --> this will remove the existing virtual environment
+
+4.pipenv run python  will point the python executable to the virtual environment created (pipenv run python <.py file> will execute the python code using executables
+in virtual environment)
+5.pipenv lock -r --> this will give all dependencies installed on project with versions. This we can redirect to requirements.txt file
+6.pipenv install -r requirements.txt file --> this will install all the dependencies in requirements.txt file on current virtual environment
+7. If you want to install a package only for dev environment (development purpose in the same virtual environment), then you can do as below
+
+pipenv install pytest --dev
+
+if we see pipfile here , we can see pytest package has been added in seperate section 
+
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+
+[packages]
+requests = "*"
+
+[requires]
+python_version = "3.6"
+
+
+8.pipenev uninstall requests --> this will remove requests package from virtual environment as well as from pipfile and pipfile.lock
+
+9. if we want to use a different version of python , then we need to just edit pipfile python_version = "3.6" to python_version = "3.7"
+and then we need to recreate the virtual environment as below
+pipenev --python 3.7
+
+10. after removing virtual env using pipenv --rm  , we will still be having our pipfile and pipfile.lock with us . 
+Now if we say 
+pipenv install --> this will recreate the virtual environment with specifications in the pipfile
+
+11. pipenv --venv will give you the path to the environment
+
+12. pipenv check --> this will check the saftey rquirements of the packages
+
+13.pipenv graph --> this will give you the dependency graph of packages if any
+
+14. Once you are done with the development , you can update the pipfile.lock before migration using
+pipenv lock 
+you can migrate the pipfile.lock to prod and create the prod virtual environment as :
+pip install --ignor-pipfile
+
+15.if you want to set the enviroment variables sepcific to a project , we can create a .env file and add our variables into it
+
+
+
+Use Pyinstaller (or similar package manager tools) to bundle python project to .exe and migrate to another enviroment.
+Use NSIS (Nullsoft scriptable Install system) to bundle all the dependencies to single exe file	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

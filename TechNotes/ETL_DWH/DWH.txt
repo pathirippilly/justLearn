@@ -1,0 +1,97 @@
+
+Data Warehouse architectures
+******************************
+1.EDW (Enterprise Data Warehousing):
+
+>>Single Centralized Data Warehouse (A single RDBMS)which accepts ETL ouptputs from different sources
+>>>This is the single point of source for all types of DSS/query tools/(OLAP/ROLAP)/Web Browsers/Data Mining
+
+2.Single Departement Datamart (Federated Architecture):
+
+>>Here Data is logically consolidated from different sources , but stored in different physical data warehouses
+>> Here for different business area , different data mart (different RDBMS) will be there
+
+3.Multi-tired architecture
+
+>> This will have a combination of above two
+>> ETL output is first collected into a single Data Warehouse and then seperated and stored in seperate datamarts
+
+why staging area is reqiuired in an ETL proccess:
+*************************************************
+1. Source systems are only available for extraction during a specific time slot which is generally lesser than your overall 
+data loading time. It’s a good idea to extract and keep things at your end before you lose the connection to the source systems.
+
+2. You want to extract data based on some conditions which require you to join two or more different systems together. 
+E.g. you want to only extract those customers who also exist in some other system. You will not be able to perform a SQL query
+joining two tables from two physically different databases.
+
+ 
+3. Various source systems have different allotted timing for data extraction.
+
+4. Data warehouse’s data loading frequency does not match with the refresh frequencies of the source systems.
+
+5. Extracted data from the same set of source systems are going to be used in multiple places (data warehouse loading, ODS loading, third-party applications etc.)
+
+6. ETL process involves complex data transformations that require extra space to temporarily stage the data
+
+7. There is specific data reconciliation / debugging requirement which warrants the use of staging area for pre, during or post load data validations
+
+
+Staging area increases latency – that is the time required for a change in the source system to take effect in the data warehouse. In lot of real time / near real time applications, 
+staging area is rather avoided.Data in the staging area occupies extra space.
+To me, in all practical senses, the benefit of having a staging area outweighs its problems. 
+Hence, in general I will suggest designating a specific staging area in data warehousing projects.
+
+Why ODS is required and how it is different from staging:
+*********************************************************
+explnation Version1:
+
+ODS can be considered as a staging area as the data can be stored here temporarily (about 45 to 60 days, this is not mandatory and is always debatable.). 
+To understand this with a case, let’s assume that there is a startup and they have started their business in a geographic location where the sales would 
+increase over 5 years and the in the beginning days or in the first 2 to 3 yrs they don’t anticipate any huge changes to the business and the sales.
+
+Setting up an EDW (Enterprise Data Warehouse) can be costly and they don’t want to spend that much on that kind of setup yet. 
+They can start with ODS. In ODS, they store that data for couple of months and back it up on to a hard drive regularly and will 
+access the historic data as and when required.
+
+After 5 yrs of successful business as the customer base and the sales have gone up they can plan for the EDW and when they do, 
+they can migrate the data backed up in the hard drive for access to historic data for any BI reports.
+
+Another case which can be taken here is ,of an eCommerce store. Now, getting the details of all the products from the EDW 
+can be time consuming considering it’s a traditional relational DBMS, then the eCommerce company can have the ODS as the primary connect point to show case the basic details of
+the product (for example the current discounts, delivery time and the related products etc.), which will make the product search easy as there will not be more data in ODS. 
+Based on the user search then it can be moved onto EDW (for example user’s history of purchases).
+
+When it comes to the staging area, the features of it are similar to what a ODS does like having the data temporarily and moving it to EDW at regular intervals.
+
+But, usually the staging area’s functionalities are limited to an application or two.
+ODS can be connected with multiple applications as it has the recent/current data. 
+
+Well, if you ask me aren’t both relational, can’t we connect the staging to multiple applications? We can, technically it is possible.
+
+And, the staging area is mostly the byproduct of an architecture which is specified for a single application but not for an enterprise. 
+This point will be different for an MDM solution where staging can be used by multiple applications.
+
+explanation version2:
+
+Operation Data Store or ODS means the current data that is required to do quick analysis or near realtime reporting.
+
+On the other side Staging is a dump of all data that you gather form multiple and heterogeneous Sources, you cleanse this data, apply multiple business rules, 
+filter it and then push it to your Data Warehouse or ODS.
+
+An ODS sits between your Staging/Factory and Data Warehouse. It gets a snapshot of most recent data, like if its a:
+- Telecom provider it would store data of around 1 month to give you quick and detailed analysis on multiple calls/sms's done on a daily basis.
+- Bank would store data for 3-6 months to 1 year for your day today transactions. That's why if you require 1-2 years of transaction details 
+it takes bank 1-2 days to provide you that list separately.
+
+If both will not manage an ODS it will become very difficult to provide quick details to their customers, and it will be a very slow process and also an 
+overhead on their servers also.
+
+Active Transformation in Informatica
+************************************
+
+
+4143575347
+
+ 
+

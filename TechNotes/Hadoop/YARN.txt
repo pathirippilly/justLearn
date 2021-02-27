@@ -1,0 +1,86 @@
+YARN
+*****
+
+Why YARN:
+
+In Hadoop version 1.0 which is also referred to as MRV1(MapReduce Version 1), MapReduce performed both processing and resource management functions. 
+It consisted of a Job Tracker which was the single master. The Job Tracker allocated the resources, performed scheduling and monitored the processing jobs. 
+It assigned map and reduce tasks on a number of subordinate processes called the Task Trackers. The Task Trackers periodically 
+reported their progress to the Job Tracker.
+
+This design resulted in scalability bottleneck due to a single Job Tracker. IBM mentioned in its article that according to Yahoo!,
+the practical limits of such a design are reached with a cluster of 5000 nodes and 40,000 tasks running concurrently. 
+Apart from this limitation, the utilization of computational resources is inefficient in MRV1.
+Also, the Hadoop framework became limited only to MapReduce processing paradigm. 
+ 
+To overcome all these issues, YARN was introduced in Hadoop version 2.0 in the year 2012 by Yahoo and Hortonworks. 
+The basic idea behind YARN is to relieve MapReduce by taking over the responsibility of Resource Management and Job Scheduling. 
+YARN started to give Hadoop the ability to run non-MapReduce jobs within the Hadoop framework. 
+ 
+YARN allows different data processing methods like graph processing, interactive processing, stream processing as well as batch processing to run and process data stored in HDFS. 
+Therefore YARN opens up Hadoop to other types of distributed applications beyond MapReduce.
+
+Architecture of YARN :
+
+Resource Manager: 
+1. Runs on a master daemon and manages the resource allocation in the cluster.
+2. There is one Resource Manager per cluster.Its the master service and usually deployed in high availability configuration(Similar to Namenode)
+3. In a Hadoop cluster, we will have an active resource manager and stand by resource manager. If active resource manager goes down, 
+stand by resource manager take over the role.
+
+This is having again two components 
+1. Scheduler
+2. Application Manager
+
+
+Scheduler
+
+The scheduler is responsible for allocating resources to the various running applications subject to constraints of capacities, queues etc.
+
+It is called a pure scheduler in ResourceManager, which means that it does not perform any monitoring or tracking of status for the applications.
+
+If there is an application failure or hardware failure, the Scheduler does not guarantee to restart the failed tasks.
+
+Performs scheduling based on the resource requirements of the applications.
+
+It has a pluggable policy plug-in, which is responsible for partitioning the cluster resources among the various applications. 
+There are two such plug-ins: Capacity Scheduler and Fair Scheduler, which are currently used as Schedulers in ResourceManager.
+
+Application Manager
+
+It is responsible for accepting job submissions.
+Negotiates the first container from the Resource Manager for executing the application specific Application Master.
+Manages running the Application Masters in a cluster and provides service for restarting the Application Master container on failure.
+
+Node Manager: 
+1. Runs on the slave daemons and are responsible for the execution of a task on every single Data Node.
+2. Node Manager will be there for each data node
+3. It is responsible for launching and monitoring containers
+
+
+Application Master: 
+1. Manages the user job lifecycle and resource needs of individual applications. 
+2. It works along with the Node Manager and monitors the execution of tasks.
+
+Container: 
+1. This is a Linux Control Group which is a linux kernel feature that allows users to allocate CPU,memory,Disk I/O and Bandwidth to a user process.
+2. Container is a user process with some resource limitations.
+
+
+Application Workflow in YARN:
+
+
+
+When Client submits an application on YARN , request goes to Application manager
+Application Manager will find one node manager and ask it to launch a container
+This is the first container of an application and we will call it an Application Master
+Application master takes over the responsibility of executing and monitoring the job
+
+
+Resource Manager allocates a container to start Application Manager
+Application Manager registers with Resource Manager
+Application Manager asks containers from Resource Manager
+Application Manager notifies Node Manager to launch containers
+Application code is executed in the container
+Client contacts Resource Manager/Application Manager to monitor application’s status
+Application Manager unregisters with Resource Manager

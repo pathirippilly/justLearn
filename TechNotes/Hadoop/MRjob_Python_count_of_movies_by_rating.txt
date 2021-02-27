@@ -1,0 +1,42 @@
+Count of movies by rating MRjob program in Python:
+**************************************************
+'''
+we have a movielens user rating data set of 100k records. Thats having 
+user_id,movie_id,rating,timestamp fields seperated by TAB.
+We need to find the number of movies by rating from the file.
+Below is yje map reduce job for the same in python 
+'''
+
+from mrjob.job import MRJob
+from mrjob.step import MRStep
+
+class RatingsBreakdown(MRJob):
+    def steps(self):
+        return [
+            MRStep(mapper=self.mapper_get_ratings,
+                   reducer=self.reducer_count_ratings)
+        ]
+
+    def mapper_get_ratings(self, _, line):
+        (userID, movieID, rating, timestamp) = line.split('\t')
+        yield rating, 1
+
+    def reducer_count_ratings(self, key, values):
+        yield key, sum(values)
+
+if __name__ == '__main__':
+    RatingsBreakdown.run()
+	
+'''
+mrjob is the mapreduce package which will recogonize the mapper and reducer in hadoop cluster
+For running the above job:
+'''
+#Running the job locally
+python <full path for above .py file> <full local path for u.data>
+
+example: 
+python RatingsBreakdown.py /home/pathirippilly/local_data_sets/movielens/u.data
+
+#Running the job in cluster(method 1 : But this is not proper)
+example:
+python 	RatingsBreakdown.py -r hadoop --hadoop-streaming-jar /usr/hdp/2.6.5.0-292/hadoop-mapreduce/hadoop-streaming.jar  /home/pathirippilly/local_data_sets/movielens/u.data

@@ -1,0 +1,48 @@
+SCD2 implementation in Hive http://dwgeek.com/impala-hive-slowly-changing-dimension-scd-type-2.html/
+********************************************************************************************************
+Lets say We have the following tables:
+
+LOAD table: This is the table with source records which will have inserts and updates.
+
+SCD2 TGT table: This the target table which is of type scd2.SCD2 has been implemented using a flag column.
+Active records will be having flag value as 1 and inactive records will be having flag value as 0.As well as
+it will be having an eff_start_dt and eff_end_dt
+
+INT table : This is the intermediate table which is used for implementing SCD2.
+
+Now steps as follows:
+
+Step 1: Create INT table same as Target and copy expired records:
+Copy all expired records INT table . This step just copying all records with flag = 0 and non-null EFF_END_DT records.
+
+Step 2: Copy all going to expire records:
+These are the records that are updated and are recieved in LOAD table. Since these records are expired, 
+You also need set the EFF_TO_DT to the ‘current_date-1’ that means record was active till yesterday and flag as ‘0’. 
+The updated records will be active from the moment we load them so EFF_FR_DT will be current date.
+
+Step 3: Copy active records from TGT to INT table:
+These are the records which are currently active and not updated. Since target table is going to be insert overwrite, 
+You will have to copy all active records to INT table.
+
+Step 4: Copy only updated records from LOAD table:
+These are records which are updated in this load cycle. Just compare the LOAD and TGT 
+table records on Patient ID or SK column and copy the record which is updated.
+
+Step 5: Copy new records from LOAD to INT:
+At any given load cycle, you may receive either updated or fresh records. 
+In this step you are going to load the new records. This is the simple step to compare the 
+LOAD and TGT table on patient ID or SK and copy the record which is new.
+
+Step 6: Perform Insert Overwrote on TGT table.
+
+You have to perform INSERT OVERWRITE on TGT table and select records from intermediate tables. 
+.Or you can also drop TGT table and rename INT as TGT table. Renaming is fast compared to INSERT.
+
+Step 7: Drop Intermediate and External Tables
+Once the destination table is populated you should drop the intermediate and external table:
+
+[1--10]
+def dun(n)
+l[]
+
+

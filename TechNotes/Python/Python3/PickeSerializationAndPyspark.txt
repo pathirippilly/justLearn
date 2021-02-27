@@ -1,0 +1,77 @@
+pickle
+*******
+references=https://stackoverflow.com/questions/3438675/common-use-cases-for-pickle-in-python
+
+
+Picke will create portable serialized representation of python objects
+
+    Classes:
+
+        Pickler
+        Unpickler
+
+    Functions:
+
+        dump(object, file)
+        dumps(object) -> string
+        load(file) -> object
+        loads(string) -> object
+		
+usecases :
+
+1) saving a program's state data to disk so that it can carry on where it left off when restarted (persistence)
+
+2) sending python data over a TCP connection in a multi-core or distributed system (marshalling)
+
+3) storing python objects in a database
+
+4) converting an arbitrary python object to a string so that it can be used as a dictionary key (e.g. for caching & memoization).
+
+
+
+
+Pyspark serializer:
+********************
+All that data which is sent over the network or written to the disk or also which is persisted in the memory must be serialized. In addition, we can say, in costly operations, serialization plays an important role.
+
+PySpark supports custom serializers for transferring data; this can improve
+performance.
+
+By default, PySpark uses L{PickleSerializer} to serialize objects using Python's
+C{cPickle} serializer, which can serialize nearly any Python object.
+Other serializers, like L{MarshalSerializer}, support fewer datatypes but can be
+faster.
+
+The serializer is chosen when creating L{SparkContext}:
+
+>>> from pyspark.context import SparkContext
+>>> from pyspark.serializers import MarshalSerializer
+>>> sc = SparkContext('local', 'test', serializer=MarshalSerializer())
+>>> sc.parallelize(list(range(1000))).map(lambda x: 2 * x).take(10)
+[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+>>> sc.stop()
+
+PySpark serializes objects in batches; by default, the batch size is chosen based
+on the size of objects and is also configurable by SparkContext's C{batchSize}
+parameter:
+
+>>> sc = SparkContext('local', 'test', batchSize=2)
+>>> rdd = sc.parallelize(range(16), 4).map(lambda x: x)
+
+Behind the scenes, this creates a JavaRDD with four partitions, each of
+which contains two batches of two objects:
+
+>>> rdd.glom().collect()
+[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]
+>>> int(rdd._jrdd.count())
+8
+>>> sc.stop()
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,188 @@
+1. /etc/passwd : this file will be having the user information
+either of the below commands can be used for getting current users
+
+awk -F':' '{ print $1}' /etc/passwd
+OR 
+getent passwd
+
+2. To add a user :
+
+useradd :
+using this you need to specify each flag value for example following command will create a 'guest_user' with home directory 
+as well as whose shell will be /bin/bash:
+
+useradd -m -s /bin/bash guest
+
+-m: create a home directory
+-s: shell under which it will be created
+
+if we are not specifying it , home directory won't be created and default shell /bin/sh will be the shell under which the user will be created
+
+after creating the user , you need to assign a password to it as follows:
+passwd guest
+
+adduser:
+
+This is another way of creating user.
+
+sudo adduser --gecos '' guest
+
+if you are not providing --gecos , it will ask for other details for the user ,otherwise only password will be asked
+
+3.To assign a group to a user:
+usermod -aG <group_name>
+
+-aG : append group
+
+4. mkdir <dir_name> : to make a directory
+5. rmdir <dir_name>: to remove a directory
+6. rm <file_name>: to remove a file
+7. rm -r <directory_name> : remove directory,sub directory and files inside both recursively
+8. vi <file_name>.<extension> to create and open a file in vi editor
+9. press i to go in insertmode  and esc to go in read mode in Vi editor
+10. On ESC mode 
+:q - for exit from read mode if no unsaved changes are there
+:q! - force quit without saving changes
+:w - save the changes
+:wq - write and qiuit (:x als do the job)
+
+11. chmod:
+ 
+chmod is for modifying access permisiion levels for files and directories
+
+A file or directory have 3 category of users:
+
+owner
+ownergroup
+others
+
+So owner of the file can set the permission for these three categories
+
+when a file/directory is created by a user, by default it will have read/write access to the owner and read only access to group/others.
+
+ls -l <file_name> will give you the access levels of the file
+
+setting permisiions:
+
+permission can be set by using a combination the below numbers
+
+4 stands for "read",
+2 stands for "write",
+1 stands for "execute", and
+0 stands for "no permission."
+
+
+for readonly its 4, for write its 2,for execute only its 1, for read and execute its 5 (i.e, 4+1), for read, write and execute its 7 (4+2+1)
+
+for a file sample.txt:
+
+chmod 755 sample.txt means 
+7 - read , write and execute permisiion for owner
+5- read and execute permission for group
+5 - read and execute permission for others
+
+12.ps :
+report a snapshot of curent proccess
+
+for a running proccess if we need to trace it :
+
+ps -fp <PID>
+
+suppose its a shell script , get the PID using:
+./shell_script.sh &
+
+
+
+ -f     Do full-format listing. This option can be combined with many other UNIX-style options to add additional columns.  It also causes the command arguments to be printed
+ -p proccess ID (PID)
+ 
+ 
+ 
+ 13.Using double quotes or [[]] for variables while doing conditional checks:
+ 
+ 
+ 
+ its manadatory to use either doubles quotes or [[]] for conditional checks, else it will always returns true for all null strings
+ 
+ For example:
+ Lets say we have written the below script for finding a file its it exists as a regular file:
+ 
+ #!/bin/bash
+
+file=$2
+if [ -e $file ] #checks for the existence of file/directory
+then
+echo "file exists"
+        if [ -f $file ] #check if its a regular file
+        then
+                echo "Its a regular file"
+        else
+                echo "Its not a regular file"
+        fi              
+else
+echo "file doesn't exist"
+fi
+
+This code will work as expected for all the not null strings as input.But if we run the script without any argument (or with a null string)
+
+$1 will become null
+Then $file will become null
+Then
+[ -e $file ] will become [ -e ] and [ -f $file ] will become [ -f ]
+[ -e ] and [ -f ] are by default true and thus both conditions will be passed
+
+Thus we will get the wrong results. And this will happen for all conditional checks
+
+To avoid this either we need to put the entire conditional check in double  square braces as below:
+
+[[ -f $file ]] 
+[[ -e $file ]]
+
+or 
+We need to put the variables in double quotes as below:
+[ -f "$file" ]
+[ -e "$file" }
+
+
+14. To check the boolean values returned by conditional operators we can use the following command:
+
+[ conditional_statement ] && echo true || echo flase 
+
+example:
+
+[ -f /etc/passwd ] && echo true || echo flase
+
+15. Using multiple conditional statements together:
+
+while using multiple conditional statements , we can use in any of the folowing ways:
+
+if we are using same type of operators with more than two conditions to check:
+
+option1:
+
+[ condition1 || condition2 || ...conditionN ]
+[ condition1 && condition2 && ...conditionN ]
+
+option2:
+
+[ condition1 -o condition2  -o ...conditionN ]
+[ condition1 -a condition2 -a ...conditionN ]
+
+
+
+
+if we are using AND and OR operators mixed then, we need to use braces:
+
+option1:
+
+[ \( condition1 || condition2 \) && \( condition1 || condition2 \) ]
+[ \( condition1 -o condition2 \) -a \( condition1 -o condition2 \) ]
+
+option2(In Modern versions of shells):
+
+[[ ( condition1 || condition2 ) && ( condition1 || condition2 ) ]]
+[[ ( condition1 -o condition2 ) -a ( condition1 -o condition2 ) ]]
+
+
+ 
+

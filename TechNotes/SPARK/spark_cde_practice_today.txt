@@ -1,0 +1,40 @@
+spark_codes_to_practice
+**********************
+1. Read from a json file(both multi line and single line)
+2. read from a csv file with a different delimitter (with header) --> Done
+3. Apply joins using dataframe APIs
+4. Apply aggregation using dataframe APIs
+5. Apply Pivot using dataframe APIs
+6. Apply transpose using dataframe APIs
+7. Parse a log file
+
+
+#read from a csv file with a different delimitter (with header) and assign the column names from header
+
+orders=spark.read.option("inferSchema",True).option("header",True).option("delimiter","|").format("csv").load("/user/pathirippilly/data/orders_pipe").toDF(*orders_columns)
+
+orders_columns=list(spark.read.csv("/user/pathirippilly/data/orders_pipe",sep="|").first())
+
+
+topNproductsPerDay.write.option("path","/user/pathirippilly/hive_data_external/pathirippilly/topNproductsPerDay").format("parquet").saveAsTable("pathirippilly.topNproductsPerDay")
+
+
+
+
+#!/usr/bin/python3.6
+
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+from pyspark.sql.window immport Window
+
+def main():
+        spark=SparkSession.builder.master("yarn").\
+                appName("GetTopNProductsPerDay").\
+                config("hive.exec.dynamic.partition",True).\
+                config("hive.exec.dynamic.partition.mode", "nonstrict").\
+                config("hive.mapred.mode","nonstrict").\
+                config("hive.exec.max.dynamic.partitions", 20000)
+                enableHiveSupport().\
+
+

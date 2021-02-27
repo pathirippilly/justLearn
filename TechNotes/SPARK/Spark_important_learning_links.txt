@@ -1,0 +1,41 @@
+Articles/Blogs/Tutorials (Texts)
+
+Top 5 mistakes when writing spark application:
+
+https://www.slideshare.net/hadooparchbook/top-5-mistakes-when-writing-spark-applications-66374492
+
+
+In Deep Discussion:
+
+spark architecture (in deep) :
+https://0x0fff.com/spark-architecture/
+
+Spark Memory Management (in deep) :
+
+https://0x0fff.com/spark-memory-management/
+
+spark architecture: Shuffle (in deep)
+https://0x0fff.com/spark-architecture-shuffle/
+
+
+Understanding Apache spark on Yarn:
+
+https://sujithjay.com/2018/07/24/Understanding-Apache-Spark-on-YARN/#executor-and-container
+
+Yarn Achitecture:
+
+https://www.edureka.co/blog/hadoop-yarn-tutorial/
+
+
+
+Video Tutorials
+
+Top 5 mistakes when writing spark application:
+
+https://www.youtube.com/watch?v=WyfHUNnMutg
+
+
+
+
+
+

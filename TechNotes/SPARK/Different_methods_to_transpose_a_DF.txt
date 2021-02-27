@@ -1,0 +1,44 @@
+
+#Creation of Input Dataframe to be Transposed
+
+ds = {'one':[0.3, 1.2, 1.3, 1.5, 1.4, 1.0],'two':[0.6, 1.2, 1.7, 1.5, 1.4, 2.0]}
+df = sc.parallelize([ (k,) + tuple(v[0:]) for k,v in ds.items()]).toDF()
+df.show()
+
+
+
+
+method 1 (This method involves conversion of spark object to a python object (rdd to list of tuples of entire data)):
+
+inp_list=df.rdd.map(tuple).collect() # Creating a list of tuples of rows
+
+# Unpacking the list and zipping all tuples together except the header
+#list(zip(*inp_list))[1:] is having the transposed tuples  and list(zip(*inp_list))[0] is having the header
+
+df_transpose=spark.createDataFrame(list(zip(*inp_list))[1:],list(zip(*inp_list))[0]) 
+df_transpose.show()
+
+method 2 (In this method only header data we are converting into python list. Rest of the transformations are carried out as spark transformations):
+
+groupedRDD=df.rdd.map(tuple).flatMap(lambda x : (x[0],x[1:])) # grouping header data and row data seperately
+
+#Collecting the header names to a list
+#Those elements of groupedRDD with data type as 'str' are header names, i.e, type(x)==str
+
+header=groupedRDD.filter(lambda x : type(x)==str).collect() 
+
+#Those elements of groupedRDD with data type as tuple are row data ,i.e, type(x)==tuple.
+#We are grouping all current rows under one key  and zipping the tuples together to form transposed tuple. 'groupByKey().mapValues(lambda x : tuple(zip(*tuple(x))))',this part denotes the same.
+#Using flatMap(lambda x : x[1]), we are excluding the key value and getting the tuples of transposed rows alone 
+
+df_T=groupedRDD.filter(lambda x : type(x)==tuple).map(lambda x : (1,x)).groupByKey().mapValues(lambda x : tuple(zip(*tuple(x)))).flatMap(lambda x : x[1]).toDF(header)
+
+method 3 (Here we are going via pure rdd approach and not storing any kind of data in form of python objects):
+
+#Here we are grouping the new header and transposed tuples and then converting them in to a dictionary.And this RDD of dictioanries , we are converting them in to dataframe
+df.rdd.map(tuple).flatMap(lambda x : [(y,(x[0],z)) for y,z in enumerate(x[1:])]).groupByKey().mapValues(tuple).map(lambda x : dict(x[1])).toDF().show() 
+
+method 4 (This is as same as method 3 except instead of using depricated dictionary to DF conversion, we are using Row object to DF conversion):
+
+#Here we are grouping the new header and transposed tuples and then converting them in to Row Object.And this RDD of dictioanries , we are converting them in to dataframe
+df.rdd.map(tuple).flatMap(lambda x : [(y,(x[0],z)) for y,z in enumerate(x[1:])]).groupByKey().mapValues(tuple).map(lambda x : Row(**dict(x[1]))).toDF().show()

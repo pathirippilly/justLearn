@@ -1,0 +1,163 @@
+BiG Data Testing Preparation:
+
+
+Main Property files:
+
+1. /etc/hadoop/conf/core-site.xml
+
+This file will be having fs.defaultFS property tag which will tell you the name node url and port
+
+2. /etc/hadoop/conf/hadoop-site.xml
+
+This file will be having dfs.blocksize and dfs.replication
+dfs.block size is the block size of the node and dfs.replication gives you the replication factor of the node
+
+
+Basic Commands:
+
+1. Move file from local to hdfs
+
+hadoop fs -copyFromLocal 
+hadoop fs -put
+
+2. Move file to local from hdfs
+
+hadoop fs -copyToLocal
+hadoop fs -get
+
+3.listing files
+
+hadoop fs -ls
+hadoop fs -ls -R : recursively list the files
+
+4.previewing data from files
+hadoop fs -tail 
+hadoop fs -cat
+
+5.checking size of the files
+hadoop fs -du
+
+6.Finding the size of a file locally
+du -sh path  :  this will give the size of the directory locally
+
+
+7. Finding size of the files in Hadoop
+hadoop fs -du -s -h /user/pathirippilly
+
+8. To know how the copied file from local has been divided in a given path 
+
+hdfs fcsk /user/pathirippilly/crime -files -blocks -locations
+
+9.seting the replication factor for a folder (and its subfolders and files)
+
+hadoop fs -setrep -R -w 3 <folder-path>
+
+10. Copying from local with custom replication factor
+
+hadoop fs -D dfs.replication=1 -copyFromLocal <src> <dest>
+
+11. removing a directory and its sub directory recursively
+
+hadoop fs -rm -R <directory path>
+
+
+Hive commands:
+
+
+
+
+
+
+Scenario 1:
+
+SQoop import of files to HDFS Hive:
+
+1.Count validation
+2. Duplicate Check
+3. Complete data validation
+
+
+
+Data Validation method 1:
+
+
+export from RDBMS as csv
+
+using pscp transfer file to local host:
+
+pscp -pw <password> <full path of the file> user@host:<path in remoe directory>
+
+
+exporting from hive as query to local :
+
+INSERT OVERWRITE LOCAL DIRECTORY '/home/pathirippilly/local_data_sets/hive_output'  
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+select * from customers_sample30; 
+
+Do a file comparison using python script
+
+
+
+Data Validation Method 2:
+
+export from RDBMS as csv
+
+using pscp transfer file to local host:
+
+pscp -pw <password> <full path of the file> user@host:<path in remoe directory>
+
+load the file as temporary table in hive
+
+Do a left outer join with target table in hive after azkaban job completed
+
+
+Scenario 1:
+
+Hive to hive table validation:
+
+1.Count validation
+2. Duplicate Check
+3. Complete data validation
+
+
+method 1:
+
+exporting from hive as query to local host path(Both the hive tables):
+
+INSERT OVERWRITE LOCAL DIRECTORY '/home/pathirippilly/local_data_sets/hive_output'  
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+select * from customers_sample30;
+
+
+compare using python script
+
+
+method2:
+
+compare using left outer join
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

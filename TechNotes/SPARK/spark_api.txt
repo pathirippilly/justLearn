@@ -1,0 +1,419 @@
+spark1.6.3
+***********
+1. spark is a distributed computing framework with bunch of APIs to process data
+2. spark uses hdfs API to deal with file system
+3. spark is developed over scala. scala is developed over java.
+4. It can run against any distributed or cloud file systems -  HDFS,s3,Azure blob etc
+5. APIs are categorized in to transformations and actions
+
+1. SETUP
+*********
+
+uncompress .targz file in linux/unix
+
+tar xzvf <compressed spark file > 
+
+
+#TO make spark 1.6.3  work in windows we need to have following set up done
+
+1. We should have a python 2.7.x version installed below two paths should be addded to %PATH% variable
+
+a.C:\Python27\Scripts
+b.C:\Python27
+
+2. We should have java 1.8.x installed respective path should be added to %JAVA_HOME% and %path% variables
+
+JAVA_HOME : C:\Program Files\Java\jdk1.8.0_131
+PATH : %JAVA_HOME%\bin
+
+3. we should have %SPARK_HOME% configured as below :
+
+SPARK_HOME : C:\spark-1.6.3-bin-hadoop2.6
+PATH : %SPARK_HOME%\bin
+
+4. winutils.exe for hadopp 2.6.0 from github should be copied to a folder called Hadoop\bin and path should be configured as below:
+
+HADOOP_HOME : C:\Hadoop
+PATH : %HADOOP_HOME%\bin
+
+2.INITIALIZING PYSPARK
+***********************
+a. using yarn 
+# in a multi cluster hadoop environments , we can initialize spark using YARN as below:
+#port number can be any five digit number less than 65535
+#if you are not specifing the port, it will use default port 4040 , which you may get or may not
+pyspark --master yarn --conf spark.ui.port=12888
+
+
+3.Create RDD from HDFS files
+*****************************
+
+RDD : A Resilient Distributed Dataset (RDD), the basic abstraction in Spark. Represents an immutable, partitioned collection of elements that can be operated on in parallel.
+
+#create a sample rdd from a file in hdfs as below
+orderitems = sc.textFile("/user/pathirippilly/retail_db/order_items")
+
+1.orderitems.first() : this will give you the first row of the data frame
+2.orderitems.take(num) : this will return a list containing first num elements of the RDD
+3.help(orderitems) : this will give you all possible functions or APIs which you can use over the RDD to proccess the data
+4.orderitems.collect() : this can be used to save each element of the RDD in to a list 
+
+4.Lazy Evaluation and DAG (Directed Acyclic Graph):
+***************************************************
+
+When you will create an RDD and define transformation APIs over it, and if you run it , it won't create any spark job.Instead , it will store 
+tranformation related information in DAG - Directed Acyclic Graph
+
+When you will perform action over it , then only job will be created and will be executed.
+ 
+5.Converting collection in to an RDD
+*************************************
+#simple example
+l = range(1,10000) #type of list
+lRDD=sc.parallelize(l) #type of RDD
+#convert a file from local filesystem to rdd
+productlist = open("/data/retail_db/products/part-00000").read().splitlines() #converting text into list of rows(each row is an element of type string here)
+productRDD = sc.parallelize(productlist) # converting list in to RDD
+
+6.sqlContext and Data Frames
+*****************************
+
+1. Data frame is an extension to RDD. These are distributed collections with structure.Data Frame APIs are provided by sqlContext.
+2. Supported file formats are orc,json,parquet,avro
+3. we can directly apply show() to preview data on a data frame
+
+#Reading the data using sqlContext.load
+sqlcontext.load("full_path","file type") # output is a dataframe ,.show() can be used to preview data
+
+example:
+sqlContext.load("/public/retail_db_json/products","json").show()
+
+#reading data using sqlContext.read.json()
+sqlContext.read.json(path)
+
+example:
+sqlContext.read.json("/public/retail_db_json/products").show()
+
+7.Row level  Transformation : Map
+*************************************************************
+a. map():Return a new distributed dataset formed by passing each element of the source through a function func.
+l=['aa bb cc dd', 'aa bb', 'dd bb cc', 'bb cc'] 
+lrdd=sc.parallelize(l) # convert above list into an rdd
+lrddmap=lrdd.map(lambda x : x.split(" "))    #return an rdd containing list of lists
+lrddmap.collect()   #return below list of lists which is iterable
+[['aa', 'bb', 'cc', 'dd'], ['aa', 'bb'], ['dd', 'bb', 'cc'], ['bb', 'cc']]
+
+b.flapMap():Similar to map, but each input item can be mapped to 0 or more output items (so func should return a Seq rather than a single item). 
+
+lrddmap=lrdd.flatMap(lambda x : x.split(" "))    #return an rdd containing list of strings 
+lrddmap.collect()   #return below list of strings  which is iterable
+['aa', 'bb', 'cc', 'dd', 'aa', 'bb', 'dd', 'bb', 'cc', 'bb', 'cc']
+
+Note: so basically if a list is returned by func, flatMap will unpack it in to individual elements.If a string is reurned it flatMap will 
+unpack it into list individual characters.Basically for every sequence or collections returned , it will unpack them in to a single list.
+
+c. filter
+simply apply filter based on the function defined inside
+
+order.filter(lambda order : order.split(",")[3]=='PENDING_PAYMENT')
+
+d.join
+
+orderitemmap=orderitem.map(lambda order : (int(order.split(",")[1]),float(order.split(",")[5])))
+ordermap=order.map(lambda order : (int(order.split(",")[0]),order.split(",")[1].split(" ")[0]))
+orderjoin=ordermap.join(orderitemmap)
+
+e.leftOuterJoin, rightOuterJoin and fullOuterJoin
+
+orderitemmap=orderitem.map(lambda order : (int(order.split(",")[1]),float(order.split(",")[4])))
+ordermap=order.map(lambda order : (int(order.split(",")[0]),order.split(",")[3]))
+orderLOjoin=ordermap.leftOuterJoin(orderitemmap)
+
+similarly we can apply rightOuterJoin and fullOuterJoin
+
+f.Aggregation
+
+1.reduceByKey and aggregateByKey will perform better than groupByKey since both the former will use com
+
+orders=sc.textFile("/user/pathirippilly/retail_db/orders") 
+orderitems=sc.textFile("/user/pathirippilly/retail_db/order_items")
+orderitemsmap=orderitems.map(lambda order : (order.split(",")[1],order.split(",")[5]))
+revenuebyOrder =  orderitemsmap.reduceByKey(lambda curr,prev :  round(float(curr)+float(prev),2))
+
+1.count orders group by order status from file : order
+
+orders.map(lambda order : (order.split(",")[3],order.split(",")[0])).countByKey()
+
+2.total revenue group by order_id from file : order_items
+
+#using reduceByKey
+a. orderitems.map(lambda order : (order.split(",")[1],order.split(",")[5])).reduceByKey(lambda curr,prev: float(curr)+float(prev))
+
+#using groupByKey
+b.
+orderitemsGroup=orderitems.map(lambda order : (order.split(",")[1],float(order.split(",")[4]))).groupByKey()
+revenuePerOrderId=orderitemsGroup.map(lambda x:(x[0],round(sum(lis	t(x[1])),2)))
+
+
+
+
+3.total revenue by date from file : order,order_items
+
+orderjoin.map(lambda order : order[1]).reduceByKey(lambda x,y:round(x+y,2)).take(10)
+
+4.count of items under each order combining orders and order_items files
+
+orderitem.map(lambda order : (int(order.split(",")[1]),float(order.split(",")[0]))).countByKey()
+
+5.order item with highest order subtotal
+
+orderitemsreduce = orderitems.reduce(lambda x,y:x if (float(x.split(",")[5])>float(y.split(",")[5])) else y)
+orderitems=sc.textFile("/user/pathirippilly/retail_db/order_items")
+
+6.order item per order with highest subtotal
+
+orderitemsorder=orderitems.map(lambda x : (int(x.split(",")[1]),x.split(",")))
+MaxRevenueItemPerOrder=orderitemsorder.reduceByKey(lambda x,y:x if float(x[5])>float(y[5]) else y)
+
+7.group by order_id order by item sub total desc 
+
+#This will return a tuple of  pairs of order_id,list of order item subtotal in descending order
+orderitemgroupsort=orderitemsGroup.map(lambda x : (x[0],sorted(list(x[1]),reverse=True)))
+
+#This will return a tuple of  pairs of order_id,list of entire rows data under each  order_id in  descending order of item subtotal
+
+orderitemsmap=orderitems.map(lambda order : (int(order.split(",")[1]),order))
+orderitemssort=orderitemsmap.groupByKey().map(lambda order : (order[0],sorted(list(order[1]),key=lambda x : float(x.split(",")[4]) ,reverse=True)))
+
+#this will give  the sorted data in a single list
+orderitemssort=orderitemsmap.groupByKey().flatMap(lambda order : (sorted(list(order[1]),key=lambda x : float(x.split(",")[4]) ,reverse=True)))
+
+8. count of items per order and revenue per order group by order using aggregateByKey:
+
+orderitemsmapgroup = orderitemsmap.aggregateByKey((0.0,0),lambda x,y : (x[0]+y,x[1]+1),lambda x,y : (x[0]+y[0],x[1]+y[1]))
+
+9. Sort every order by order date in descending order
+
+ordermapsort=orders.map(lambda order : (int(order.split(",")[1].split(" ")[0].replace("-","")),order)).sortByKey(True).map(lambda x : x[1])
+
+10. Sorting composite Key
+
+#Below code will sort both the keys in ascending order (Product_ID,Price)
+
+product=sc.textFile("/user/pathirippilly/retail_db/products")
+productSorted=product.filter(lambda x : x.split(",")[4] != "" ).map(lambda x : ((int(x.split(",")[0]),float(x.split(",")[4])),x)).sortByKey().map(lambda x : x[1])
+ 
+ 
+#Below code will sort both the keys in descending order (Product_ID,Price)
+productSorted=product.filter(lambda x : x.split(",")[4] != "" ).map(lambda x : ((int(x.split(",")[0]),float(x.split(",")[4])),x)).sortByKey(False).map(lambda x : x[1])
+
+#Below code will sort Price   in descending order while keeping Product_ID in ascending order(Product_ID,Price)
+productSorted=product.filter(lambda x : x.split(",")[4] != "" ).map(lambda x : ((int(x.split(",")[0]),-float(x.split(",")[4])),x)).sortByKey().map(lambda x : x[1])
+
+11.Ranking : list top ten priced products
+
+#using take() over sortByKey
+productSorted=product.filter(lambda x : x.split(",")[4] != "" ).map(lambda x : (float(x.split(",")[4]),x)).sortByKey(False).map(lambda x : x[1]).take(10)
+#using top() over rdd: this will sort the data in descending order by default
+productSorted=product.filter(lambda x : x.split(",")[4] != "" ).top(10,key=lambda x : float(x.split(",")[4]))
+#using takeOrdered:By Default sort in ascending order, since here the key is a number (float) we can negate the key to make it descending 
+productSorted=product.filter(lambda x : x.split(",")[4] != "" ).takeOrdered(10,key=lambda x : -float(x.split(",")[4]))
+
+12.Get Tope N product by price per category:Using Python Collections
+
+# this will give the top priced products of every category
+
+#this will give top products of each category
+productSorted=product.filter(lambda x : x.split(",")[4] != "" ).map(lambda x : (int(x.split(",")[1]),x)).groupByKey().\
+flatMap(lambda x : sorted(list(x[1]),key=lambda y:float(y.split(",")[4]),reverse=True)[:1:]) 
+
+13.Get top n priced products per category
+#method 1 directly applying the logic in single line of code (complex) (without using a seperate function for this)
+
+##You can code as two part as below
+
+productgroup=product.filter(lambda x : x.split(",")[4] != "" ).map(lambda x : (int(x.split(",")[1]),x)).groupByKey()
+productgroup.flatMap(lambda x : [y for y in list(x[1]) if float(y.split(",")[4]) in sorted(set(list(map(lambda x : float(x.split(",")[4]),list(x[1])))),reverse=True)[:1:]])
+
+##OR
+##in a single line as below
+ 
+product.filter(lambda x : x.split(",")[4] != "" ).map(lambda x : (int(x.split(",")[1]),x)).groupByKey().\
+flatMap(lambda x : [y for y in list(x[1]) if float(y.split(",")[4]) in sorted(set(list(map(lambda x : float(x.split(",")[4]),list(x[1])))),reverse=True)[:1:]])
+
+#method 2 using a seperate function
+
+def topNpricedProducts(category_tuple,num):
+	topNprices=sorted(set(list(map(lambda x : float(x.split(",")[4]),list(category_tuple[1])))),reverse=True)[:num:] 
+	filtered_list=filter(lambda order:float(order.split(",")[4]) in topNprices,list(category_tuple[1])) 
+	return filtered_list 
+productSorted=productgroup.flatMap(lambda x : topNpricedProducts(x,1))
+
+#method 3 Using takewile: since in above example if we sort the input list , we can use takewhile to improve the perfomance 
+
+def topNpricedProducts(category_tuple,num):
+	sorted_list = sorted(list(category_tuple[1]),key=lambda x : float(x.split(",")[4]),reverse=True) # we will sort the input list first
+	topNprices=sorted(set(map(lambda x : float(x.split(",")[4]),sorted_list)),reverse=True)[:num:] # we remove duplicates are prepare a set of  top N prices 
+	import itertools as it #this package has takewhile() function
+	return it.takewhile(lambda order:float(order.split(",")[4]) in topNprices,sorted_list) #takewhile will search only up to the lowest price of topNprices in sorted_list.
+	##this will improve the performance
+
+productSorted=productgroup.flatMap(lambda x : topNpricedProducts(x,1))
+
+
+g. SET operations
+
+orders=sc.textFile("/user/pathirippilly/retail_db/orders")
+orderitems=sc.textFile("/user/pathirippilly/retail_db/order_items")
+order201312=orders.filter(lambda x : x.split(",")[1][:7:]=='2013-12')
+order201401=orders.filter(lambda x : x.split(",")[1][:7:]=='2014-01')
+order201312map=order201312.map(lambda x : (int(x.split(",")[0]),x))
+order201401map=order201401.map(lambda x : (int(x.split(",")[0]),x))
+orderitemsmap=orderitems.map(lambda x : (int(x.split(",")[1]),x))
+order201312join=order201312map.join(orderitemsmap)
+order201401join=order201401map.join(orderitemsmap)
+
+orderitems201312=order201312map.join(orderitemsmap).map(lambda x : x[1][1])
+orderitems201401=order201401map.join(orderitemsmap).map(lambda x : x[1][1])
+
+#Case:  the products which are sold in  201312 and 201401 : UNION
+orderitems201401.map(lambda x : x.split(",")[2]).union(orderitems201312.map(lambda x : x.split(",")[2])) # includes duplicates
+orderitems201401.map(lambda x : x.split(",")[2]).union(orderitems201312.map(lambda x : x.split(",")[2])).distinct() #excludes duplicates
+
+#case : the products which are sold  both in 201312 and 201401 : intersection
+orderitems201401.map(lambda x : x.split(",")[2]).intersection(orderitems201312.map(lambda x : x.split(",")[2]))
+
+#case : the products which are not sold   in 201312 but sold in  201401 : subtract
+orderitems201401.map(lambda x : x.split(",")[2]).subtract(orderitems201312.map(lambda x : x.split(",")[2]))# includes duplicates
+orderitems201401.map(lambda x : x.split(",")[2]).subtract(orderitems201312.map(lambda x : x.split(",")[2])).distinct() #excludes duplicates
+
+8.Saving Data in to HDFS 
+**************************
+#Save output into textFile 
+##case : total_revenue and count of items by order_id order by order date. Save the data into a text file in hadoop
+
+orders=sc.textFile("/user/pathirippilly/retail_db/orders")
+orderitems=sc.textFile("/user/pathirippilly/retail_db/order_items")
+
+finalList=orders.map(lambda x : (int(x.split(",")[0]),x)).join(orderitems.map(lambda x : (int(x.split(",")[1]),x))).\
+map(lambda x : (int(x[1][0].split(",")[0]),x[1][0].split(",")[0]+","+x[1][0].split(",")[1]+","+x[1][1].split(",")[4])).\
+aggregateByKey((0,0,0.0,0),lambda x,y: (int(y.split(",")[0]),int(y.split(",")[1].split(" ")[0].replace("-","")),round(x[2]+float(y.split(",")[2]),2),x[3]+1),\
+lambda x,y : (x[2]+y[2],x[3]+y[3])).map(lambda x : (x[1][1],",".join([str(y) for y in x[1]]))).sortByKey().map(lambda x : x[1])
+finalList.saveAsTextFile("/user/pathirippilly/revenuePerOrderId")
+
+
+#Save output into textFile with compression:
+Using saveAsTextFile , by passing the compressionCodecClass value , we can compress and store the output file.
+We can pass only those codec classes which are listed in /etc/hadoop/conf/core-site.xml file as below
+
+<property>
+      <name>io.compression.codecs</name>
+      <value>org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.SnappyCodec</value>
+    </property>
+	
+Note: using spark, you can read the file as usual and process the data even though it is compressed. But if you try to read it manually using hadoop fs commands , it will give
+compressed junk output
+
+#Save output in to json
+Note:if we are reading from a file and using sc.textFile , essentially the output is rdd which is of 1 dimension.so in that case we need to convert it in to a collection as follows
+
+revenuePerOrderID=sc.textFile("/user/pathirippilly/revenuePerOrderId")
+rMap=revenuePerOrderID.map(lambda x:[x.split(",")[0],x.split(",")[1],x.split(",")[2],x.split(",")[3]])
+revenueDF=rMap.toDF(schema=["order_id","order_date","order_revenue","count_of_products"])
+
+now we can save it in to a fileformat of our choice in either of two methods
+
+revenueDF.save("/user/pathirippilly/revenuePerOrderIdJson","json")
+OR,"json")
+
+
+
+Brief note on this :
+*********************
+
+Suppose we have a simple rdd as follows:
+
+rdd = sc.parallelize(['3e866d48b59e8ac8aece79597df9fb4c'])
+
+Naively convert this to a data frame doesn’t seem to work:
+
+rdd.toDF()
+Traceback (most recent call last):
+...
+raise TypeError("Can not infer schema for type: %s" % type(row))
+TypeError: Can not infer schema for type:
+
+Even if we provide a schema:
+
+myschema=StructType([StructField("col1", StringType(),True)])
+rdd.toDF(myschema).show()
+
+which gives another error:
+
+TypeError: StructType can not accept object '3e866d48b59e8ac8aece79597df9fb4c' in type
+
+Solution:
+The solution is really simple actually, because the rdd we have is essentially one dimensional 
+data structure while a data frame has to be 2 dimensional, so simply map each number to a tuple solves the problem:
+
+rdd.map(lambda x: (x,)).toDF().show()
++--------------------+
+| _1|
++--------------------+
+|3e866d48b59e8ac8a...|
++--------------------+
+
+#SPARK DATAFRAME OPERATIONS
+###########################
+
+1. Writing from data frame to a table:
+
+option1:
+
+Here we need to create a table first with columns of similar 
+data type and orders as of dataframe and then use the below command:
+
+dataframe.insertInto(table_name)
+
+example:
+
+daily_rev.insertInto("pathirippilly_daily_revenue.daily_revenue") 
+
+here 'daily_rev' is a dataframe,'pathirippilly_daily_revenue' is the database ,'daily_revenue' is the table
+
+option2:
+
+Here spark will create table for you at the time of insertion of data
+
+daily_rev.saveAsTable("pathirippilly_daily_revenue.daily_revenuecopy1")
+
+here 'daily_rev' is a dataframe,'pathirippilly_daily_revenue' is the database ,'daily_revenue' is the table
+
+
+2. save the file in a particular hdfs path as in any of the formats:
+
+option1: Using save
+daily_rev.save("/user/pathirippilly/daily_revenue_save_check","json")
+
+
+option2:using write
+daily_rev.write.json("/user/pathirippilly/daily_revenue_write_check")
+
+3.select operation on Dataframe
+daily_rev.select("order_date","daily_revenue_per_product")
+
+4.Filtering on Dataframe
+daily_rev.filter(daily_rev.order_date<'2013-07-26 00:00:00.0').show() -- this will filter out  all records less than the mentioned timestamp
+
+5.Count of records 
+daily_rev.count() -- this will give record count of the df
+
+
+
+
+saving dataframe content into a hdfs location (need to specify the mode)
+filtering from dataframes
+joining using dataframes
+write into a particular format(without specifying the mode,directly using the method of the interface)
+creating rdd out of a dataframe
+

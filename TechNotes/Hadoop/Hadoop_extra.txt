@@ -1,0 +1,125 @@
+Migration of data from one hadoop cluster to another hadoop cluster
+*******************************************************************
+distcp - distributed copy:
+
+It can be used to copy data from one cluster to another
+It use mapreduce and can use all resources in the cluster
+Make sure you do it in the red zone(Down Time)
+Make sure the data is not being added while running the migration
+you can use distcp to copy delta as well
+
+Usage:
+Back up of the data from one cluster to another cluster during the time of major upgrades
+periodic backups of data
+Migration of data from one Hadoop cluster to another hadoop cluster
+
+for example:
+suppose if we want to copy from one cluster with name node ip : ip-10-0-0-11 to another cluster with nn ip : ip-10-0-0-18
+first thing we need to make sure that remote cluster is accessible from native cluster.For that , try to list the contents of
+remote active directory as follows
+
+native cluster  is : ip-10-0-0-11
+from native cluster CLI, fire the below command:
+
+hadoop fs -ls hdfs://ip-10-0-0-18.ec2.internal:8020/user/ec2-user 
+
+here ip-10-0-0-18.ec2.internal:8020 is the remote directory name node address , which is 
+nothing but the fs.defaultf property value in core-site.xml for that cluster 
+
+this will list the files and directories under /user/ec2-user of traget cluster
+
+
+
+
+
+
+
+map v/s mapper and reduce v/s reducer 
+**************************************
+>> map and reduce are the functions used for developing the program for proccessing data in hadoop
+>> mapper and reducer tasks are the hadoop  binaries which will take care the exection of above program in data node of hadoop cluster 
+
+If you are using cloudera VM
+****************************
+>>Cloudera VM uses DHCP-Dynamic Host Configuration Protocol. So it keeps changing its ip adress and we need to take care of it while exporting files from local
+to VM.To check the ip address you need to fire the below command in VM
+ifconfig -a 
+
+if you want to copy a file from local Windows to a server 
+****************************************************************************
+pscp -pw <password> <full path of the file> user@host:<path in remoe directory>
+
+scp stands for secure cp (copy), which means you can copy files across ssh connection. 
+That connection will be securely encrypted, it is a very secure way to copy files between computers.
+
+pscp stands for PuTTY secured copy
+
+
+scp uses by default the port 22, and connect via an encrypted connection or secure shell connection. (ssh for short)
+
+More on scp command is in this link :https://www.garron.me/en/articles/scp.html
+
+if you want to copy a file from local linux to to a server 
+****************************************************************************
+scp <full path of the file> user@host:<path in remoe directory>
+
+SSH from windows powershell
+***************************
+to use ssh in powershell (or even to use pscp), you need to have sh client putty installed.Then you can use following format to connect to a remote linux server
+
+plink -ssh pathirippilly@host -pw <password>
+
+plink : PuTTY link 
+
+To view contents of entire text files in a directory
+***********************************************************
+
+hdfs dfs -text /user/pathirippilly/mapreduce_jobs/output_shell/*
+
+What is FSimage and edit log
+****************************
+namespace:
+A namespace in general refers to the collection of names within a system. Within hadoop this refers to the file names with their paths maintained by a name node. 
+For example the file name /user/jim/logfile will be different from /user/linda/logfile where as the namespace will include both these names.
+
+Namenode:
+Metadata maintained by the name node includes the name of the file (including path), size, owner, group, permissions, block size etc. 
+The namenode also gets a report from data nodes called block report that contains the location of each block of a file within that data node. 
+The namenode stores the metadata about the files in memory as well as disc. This metadata is stored in a file called fsimage. 
+The block report data is not stored on the disk and is computed dynamically from the block report received from the data nodes.
+
+fsimage:
+An fsimage file contains the complete state of the file system at a point in time. 
+Every file system modification is assigned a unique, monotonically increasing transaction ID. 
+An fsimage file represents the file system state after all modifications up to a specific transaction ID.
+
+edits – An edits file is a log that lists each file system change (file creation, deletion or modification) that was made after the most recent fsimage.
+
+
+
+The fsimage is read from the disk when namenode starts and maintained in memory. 
+Any changes done to the filesystem (adding a file, removing a file etc) are not written to fsimage immediately and are maintained in a separate file on disk called editlog. 
+When a name node starts, it syncs the edit log changes with the old fsimage file and updates that into a new copy. 
+This process of updating the changes from the edit log to the fsimage file can also be done by a periodic checkpointing process by the secondary namenode.
+
+in hdfs.xml we can set any of the below properties to limit the volume of edit logs holded by memory 
+
+You can set the snapshot period with:
+dfs.namenode.checkpoint.check.period
+ OR 
+limit the number of stored transactions with :
+dfs.namenode.checkpoint.txns
+
+
+
+
+
+
+What if a name node fails
+***************************
+
+1.Backup the Metadata : Name node writes to local disk and NFS(Network File System) :
+If you can afford loosing a minimum amount of data thats not backed up and can afford some down time , 
+then restoring this back up is the simpler solution
+2.Secondary Name node : Maintains a merged copy of the editlogs , we can restore name node  from this editlogs 
+

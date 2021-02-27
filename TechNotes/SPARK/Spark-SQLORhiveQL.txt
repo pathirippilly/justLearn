@@ -1,0 +1,649 @@
+HIVE
+**********
+--Hive Language Manual : https://cwiki.apache.org/confluence/display/Hive/LanguageManual
+/*Create DATABASE and TABLE*/ 
+/*-------------------------*/
+
+/*This will create a database*/
+
+create database pathirippilly_retail_db_txt;
+
+/*this will switch to the new database*/
+
+use pathirippilly_retail_db_txt;
+
+--All Hive related properties are available under /etc/hive/conf/hive-site.xml
+
+/*  the hive.metastore.warehouse.dir property for which value will be a path where  all the warehouse related objects will be stored in HDFS*/
+
+set hive.metastore.warehouse; --this will provide the value of this property: /apps/hive/warehouse
+dfs -ls /apps/hive/warehouse -- this will list all the objects inside the warehouse.Those ending with .db extension are the DBs created
+
+/*create a table from text file :  orders*/
+ create table orders (
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string
+) row format delimited fields terminated by ','
+stored as textfile;
+
+
+
+/*load data in to the table*/
+load data local inpath '/data/retail_db/orders' into table 	orders -- this will append if any data already exist, it won't overwrite
+load data local inpath '/data/retail_db/orders' overwrite into orders --everytime it will overwrite 
+--If we are not mentioning the keyword 'local' , hadoop will assume the file we have given is in HDFS path
+LOAD DATA [LOCAL] INPATH 'filepath' [OVERWRITE] INTO TABLE tablename [PARTITION (partcol1=val1, partcol2=val2 ...)] -- this will load in to partitions 
+
+--Loaded file will be available in below path:
+dfs -ls /apps/hive/warehouse/pathirippilly_retail_db_txt.db/orders
+
+
+/*create a table from text file :  orderitems and load from text file*/
+
+create table pathirippilly_retail_db_txt.orderitems (
+order_item_id int,
+order_item_order_id int,
+order_item_product_id int,
+order_item_quantity int,
+order_item_subtotal float,
+order_item_product_price float
+) row format delimited fields terminated by ','
+stored as textfile;
+
+load data local inpath '/data/retail_db/order_items' into table pathirippilly_retail_db_txt.orderitems;
+
+/*create table from orc(Optimized Row Columnar file) file*/
+
+create database pathirippilly_retail_db_orc;
+use pathirippilly_retail_db_orc;
+
+ create table orders (
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string
+) stored as orc;
+
+create table orderitems (
+order_item_id int,
+order_item_order_id int,
+order_item_product_id int,
+order_item_quantity int,
+order_item_subtotal float,
+order_item_product_price float
+) stored as orc;
+
+describe formatted orderitems;
+
+
+/*
+Here , since the source file is in csv format and output need to be stored as ORC, its a two stage proccess.
+First we need to load it in to a stage table which is created by row format delimited fields terminated by ','.
+Second we need to insert data from stage to target
+*/
+
+--Here in case of order and order_items , we have stage data available in pathirippilly_retail_db_txt DB.So what we have to do is as below:
+insert into table orders select * from pathirippilly_retail_db_txt.orders;
+insert into table orderitems select * from pathirippilly_retail_db_txt.orderitems;
+
+/*RUNNING sql in spark sql */
+
+--using sqlContext we can run sqls on hive tables  or tables created from spark
+--example
+sqlContext.sql("select * from pathirippilly_retail_db_txt.orders").show(10) -- this will list 10 records of orders table.
+--scenario , get the metadat of any table by getting it as a user input argument, and access each of the properties in it by jus calling the properties
+
+/*load customer table*/
+
+create table  pathirippilly_retail_db_txt.customers (
+customer_id int,
+customer_fname varchar(45),
+customer_lname varchar(45),
+customer_email varchar(45),
+customer_password varchar(45),
+customer_street varchar(255),
+customer_city varchar(45),
+customer_state varchar(45),
+customer_zipcode varchar(45)
+) row format delimited fields terminated by ','
+stored as textfile;
+
+load data local inpath '/data/retail_db/ocustomers' into table pathirippilly_retail_db_txt.customers;
+
+/*functions*/
+
+--STRING MANIPULATION
+length(<input string>) --returns the length of the string
+instr(<input string>,<substring>) --return position of substring in inpu string
+substr(<input string>,p,n) --extract n characters starting from position p,where if p<0 means p points to length(<input string>)-p  and n should always be positive
+
+--similar to sql (especially my sql), we have below functions for string manipulation
+<column_name> like <pattern> --returns column values satisfy the pattern
+<column_name> rlike <pattern> --similar to 'like' but used for matching regular expressions
+lcase(<column_name>) or lower(<column_name>) --for ower case conversion
+ucase(<column_name>) or upper(<column_name>) --for upper case conversion
+initcap(<column_name>) --will convert the first letter of the input column value to upper case while keep all others into lower case
+trim(<column_name>) --clear leading and trailing spaces
+ltrim(<column_name>) --clear leading spaces
+rtrim(<column_name>)-- clear trailing spaces
+rpad(str, len, pad) -- Returns str, right-padded with pad to a length of len
+lpad(str, len, pad) -- Returns str, left-padded with pad to a length of len
+cast(<column> as <datatype>) -- cast the column in to the datatype mentioned 
+split(<column>,<delimitter>) ----convert the  column in values into list of sub-strings seperated by delimitter
+--after converting in to list , this list can be accessed by
+index(split(<column>,<delimitter>),n) -- return nth element of array
+
+--DATE MANIPULATION
+current_date --returns the current date in yyyy-mm-dd format
+current_timestamp --returns the current date time stamp in 
+date_add --date_add(start_date, num_days) - Returns the date that is num_days after start_date.
+date_format --date_format(date/timestamp/string, fmt) - converts a date/timestamp/string to a value of string in the format specified by the date format fmt.
+/*But input date or string  or timestamp ,it understands only the default format such as yyyy-MM-dd in case of date and yyyy-MM-dd HH:mm:ss for timestamp.So you need
+to care about it while giving the first argument which is nothing but the date 
+ */
+--examples
+/*this will give the current year in yyyy format*/
+select date_format(current_date,'y') 
+select date_format(current_date,'yyyy') 
+/*this will give the current year in yy format*/
+select date_format(current_date,'yy') 
+/*this will give the current month in MM format*/
+select date_format(current_date,'MM') 
+select date_format(current_date,'M')
+/*this will give the current month in MMM format*/
+select date_format(current_date,'MMM')
+/*this will give the current date in dd format*/
+select date_format(current_date,'dd')
+
+date_sub --date_sub(start_date, num_days) - Returns the date that is num_days before start_date
+--example
+
+select current_date,date_sub(current_date,5) -- this  returns the date 5 days less than current date
+/*dates should be in yyyy-MM-dd format*/
+
+datediff --datediff(date1, date2) - Returns the number of days between date1 and date2
+/*dates should be in yyyy-MM-dd format*/
+
+day --day(param) - Returns the day of the month of date/timestamp, or day component of interval
+--example:
+select day(current_date); -- this will return the day of current month
+dayofmonth-- same as day() function
+
+to_date --The TO_DATE function returns the date part of the timestamp in the format ‘yyyy-MM-dd’.
+
+unix_timestamp() --This function returns the number of seconds from the Unix epoch (1970-01-01 00:00:00 UTC) to current date time if no arguments are given
+/*
+There are two optional arguments for this function
+1. date : if we are passing date alone, then it should be in yyyy-MM-dd format or yyyy-MM-dd HH:mm:ss,since thats the default time format which hive understands
+2. format/pattern : if we want to pass a date of different format, then we need to pass this argument as well.
+*/
+--example1: unix_timestamp with date parameter alone :
+unix_timestamp('2013-03-12') --  this will return number of seconds from the Unix epoch (1970-01-01 00:00:00 UTC) to 2013-03-12. Hive assumes the date is in yyyy-MM-dd format
+--example1: unix_timestamp with date and pattern as arguments :
+unix_timestamp ('03-20-09', 'MM-dd-yy'); --  this will return number of seconds from the Unix epoch (1970-01-01 00:00:00 UTC) to 2009-03-20.
+
+from_unixtime() /*
+This function converts the number of seconds from unix epoch (1970-01-01 00:00:00 UTC) to a STRING that represents the
+ TIMESTAMP of that moment in the current system time zone in the format of “1970-01-01 00:00:00
+*/
+--example:
+from_unixtime(unix_timestamp ('03-20-09', 'MM-dd-yy')); -- output will be 2009-03-20 00:00:00
+from_unixtime(unix_timestamp ('03-20-09 22:23:36.000', 'MM-dd-yy HH:mm:ss'));  -- output is 2009-03-20 22:23:36
+
+from_utc_timestamp(<date time>,<pattern>):
+/*
+This function assumes that the string in the first expression is UTC and then, converts that string to the time zone of the second expression.
+ This function and the to_utc_timestamp function do timezone conversions.
+
+*/
+--example:
+SELECT  from_utc_timestamp('1970-01-01 07:00:00', 'IST'); -- output is 1970-01-01 12:30:00 
+
+
+to_utc_timestamp(<date time>,<pattern>):
+/*
+This function assumes that the string in the first expression is in the timezone that is specified in the second expression, 
+and then converts the value to UTC format. This function and the from_utc_timestamp function do timezone conversions.
+*/
+
+--example:
+to_utc_timestamp('1970-01-01 12:30:00', 'IST'); -- this will return 1970-01-01 07:00:00
+
+from_unixtime( bigint number_of_seconds [, string format] ):
+/*
+The from_unixtime function converts the specified number of seconds from Unix epoch and returns the date in the format ‘yyyy-MM-dd HH:mm:ss’ if no string formats are specified.
+or else returns the date in the format mentioned
+*/
+--example1 :  
+from_unixtime(unix_timestamp ('03-20-09', 'MM-dd-yy'),'MMM dd,yyyy'); -- this will return Mar 20,2009
+from_unixtime(unix_timestamp ('03-20-09', 'MM-dd-yy')); -- this will return 2009-03-20 00:00:00 
+
+
+to_unix_timestamp -- this is as same as unix_timestamp function 
+
+YEAR( string date ) --returns the year part ,Hive assumes the date is in yyyy-MM-dd format
+month(string date) --returns the month part ,Hive assumes the date is in yyyy-MM-dd format
+HOUR(string date)--The HOUR function returns the hour part of the date,Hive assumes the date is in yyyy-MM-dd format
+MINUTE(string date) --The MINUTE function returns the minute part of the timestamp,Hive assumes the date is in yyyy-MM-dd format
+SECOND(string date) --The SECOND function returns the second part of the timestamp,Hive assumes the date is in yyyy-MM-dd format
+WEEKOFYEAR( string date ) --this wll return the week of the year,Hive assumes the date is in yyyy-MM-dd format
+months_between(date1,date2) -- this will return months between two dates,Hive assumes the date is in yyyy-MM-dd format.if date1<date2 , then result will have a negation sign.
+next_day--next_day(start_date, day_of_week) - Returns the first date which is later than start_date and named as indicated.
+--example:
+select next_day(current_date,'MON'); -- this will give the date of next monday from current date
+
+
+
+/*Aggregations - selected aggregations as scenarios*/
+
+--count of orders group by status
+select count(1) count_of_orders,order_status from orders group by order_status;
+--count of orders group by customer,order_status order by customer_id
+
+select count(1) count_of_orders,order_customer_id,order_status from orders group by order_customer_id,order_status order by order_customer_id
+
+--count of orders group by customer,order_status order by (count of orders group by customer)
+/*this will return number of orders per status that each customer places. output will be in order of customers who have placed higher number of orders.
+if two customers with same number of orders comes,then recent order placed date will take in to consideration.
+*/
+select dense_rank() over (order by count_of_orders desc,recent_order_date desc) rank_on_order,
+order_customer_id,
+order_status,
+count_of_orders,
+count_of_orders_per_staus,
+from_unixtime(recent_order_date) recent_order_date_time
+from 
+(select distinct count(order_id) over (partition by order_customer_id) count_of_orders,
+count(order_id) over (partition by order_customer_id,order_status) count_of_orders_per_staus,
+max(unix_timestamp(order_date)) over (partition by order_customer_id) recent_order_date,
+order_customer_id,
+order_status  
+from orders)  a 
+limit 30;
+
+
+
+/*CASE AND NVL*/
+
+--FUNCTION : CASE example:
+/*
+if a customer is having 
+ case 1 : total count of orders is greater than equal to 5 and 
+ (supspected fraud count > COMPLETE + PROCESSING + CLOSED + PAYMENT_REVIEW  OR last five orders are suspected fraud)
+ Then flag this customer as Fraud
+ case 2: total count of orders is greater than equal to 5  and supspected fraud count  + cancelled + pending payment > COMPLETE + PROCESSING + CLOSED + PAYMENT_REVIEW  
+ Then flag this customer as supected
+ case 3 : supspected fraud count  + cancelled + pending payment + on_hold + pending > COMPLETE + PROCESSING + CLOSED +PAYMENT_REVIEW 
+ then customer is  Under_Observation
+ case 4 : if none of the above cases status is OK
+
+ and output should be order by status , FRAUD-SUSPECTED-UNDER_OBSERVATION-OK
+ 
+ output columns : Customer_ID,Customer_Name,count_of_orders,customer_status
+*/
+select 
+customer_id,
+customer_name,
+count_of_orders,
+case 
+when count_of_orders >= 5 and (SUSPECTED_FRAUD > COMPLETE + PROCESSING + CLOSED + PAYMENT_REVIEW or flg=5) then 'FRAUD'
+when count_of_orders >= 5 and (SUSPECTED_FRAUD + CANCELLED + PENDING_PAYMENT > COMPLETE + PROCESSING + CLOSED + PAYMENT_REVIEW) then 'SUSPECTED'
+when SUSPECTED_FRAUD + CANCELLED + PENDING_PAYMENT + ON_HOLD + PENDING > COMPLETE + PROCESSING + CLOSED + PAYMENT_REVIEW then 'UNDER_OBSERVATION'
+else 'OK' end as Customer_Status
+from
+(
+select 
+main.order_customer_id customer_id,
+main.customer_name customer_name,
+main.count_of_orders count_of_orders,
+nvl(fraud.cnt,0) as SUSPECTED_FRAUD,
+nvl(cncl.cnt,0) as CANCELLED,
+nvl(pendgpmt.cnt,0) as PENDING_PAYMENT,
+nvl(hold.cnt,0) as ON_HOLD,
+nvl(pndg.cnt,0) as PENDING,
+nvl(rvw.cnt,0) as PAYMENT_REVIEW,
+nvl(cmplt.cnt,0) as COMPLETE,
+nvl(prcsng.cnt,0) as PROCESSING,
+nvl(clsd.cnt,0) as CLOSED,
+nvl(flag.flg,0) as flg
+from
+(select order_customer_id,
+concat(customer_fname," ",customer_lname) customer_name,
+count(1) count_of_orders
+from orders o
+inner join customers c
+on(o.order_customer_id=c.customer_id)
+group by order_customer_id,customer_fname,customer_lname) main
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where order_status = 'SUSPECTED_FRAUD'
+group by order_customer_id ) fraud
+on(main.order_customer_id=fraud.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where order_status = 'CANCELLED'
+group by order_customer_id ) cncl
+on(main.order_customer_id=cncl.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where order_status = 'PENDING_PAYMENT'
+group by order_customer_id ) pendgpmt
+on(main.order_customer_id=pendgpmt.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where  order_status = 'ON_HOLD'
+group by order_customer_id ) hold
+on(main.order_customer_id=hold.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where order_status = 'PENDING'
+group by order_customer_id ) pndg
+on(main.order_customer_id=pndg.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders
+where order_status = 'PAYMENT_REVIEW' 
+group by order_customer_id ) rvw
+on(main.order_customer_id=rvw.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where order_status = 'COMPLETE'
+group by order_customer_id )cmplt
+on(main.order_customer_id=cmplt.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where order_status = 'PROCESSING'
+group by order_customer_id ) prcsng
+on(main.order_customer_id=prcsng.order_customer_id)
+left outer join
+(select order_customer_id,
+count(1) cnt
+from orders 
+where order_status = 'CLOSED'
+group by order_customer_id ) clsd
+on(main.order_customer_id=clsd.order_customer_id)
+left outer join
+(select 
+distinct 
+order_customer_id,
+sum(flag) over (partition by order_customer_id) as flg
+from  
+(select 
+order_customer_id,
+order_id,
+order_date,
+(case when order_status='SUSPECTED_FRAUD' then 1 else 0 end) flag,
+dense_rank() over (partition by order_customer_id order by order_date desc) rnk
+from orders) flag
+where rnk<=5) flag
+on(main.order_customer_id=flag.order_customer_id)
+) a
+limit 30;
+
+/*Runninga hive file from command line */
+
+hive -f <filename.sql>
+
+
+
+/*
+For short scripts, you can use the -e option to specify the commands inline, in which case the final semicolon is not required:
+*/
+ hive -e 'SELECT * FROM dummy' 
+ 
+/*
+In both interactive and noninteractive mode, Hive will print information to standard error—such as the time taken to run a query—during 
+the course of operation. You can suppress these messages using the -S option at launch time, which has the effect of showing only the output result for queries:
+*/
+hive -S -e 'SELECT * FROM dummy' 
+
+/*CONFIGURINg HIVE*/
+Hive is configured using an XML configuration file like Hadoop’s. The file is called hive-site.xml and is located in Hive’s conf directory.
+This file is where you can set properties that you want to set every time you run Hive. The same directory contains hivedefault.xml,
+which documents the properties that Hive exposes and their default values
+
+You can override the configuration directory that Hive looks for in hive-site.xml by passing the --config option to the hive command: % hive --config /Users/tom/dev/hive-conf 
+
+Note that this option specifies the containing directory, not hive-site.xml itself. It can be useful when you have multiple site files—for different clusters, 
+say—that you switch between on a regular basis.Alternatively, you can set the HIVE_CONF_DIR environment variable to the configuration directory for the same effect
+
+/*Hive external tables*/
+
+create external table orders_ext (
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string
+) row format delimited fields terminated by ','
+stored as textfile
+location '/user/pathirippilly/hive_external_tables';
+
+With the EXTERNAL keyword, Hive knows that it is not managing the data, s
+o it doesn’t move it to its warehouse directory. Indeed, it doesn’t even check whether the external location exists at the time it is defined. 
+This is a useful feature because it means you can create the data lazily after creating the table. 
+
+if you drop an external table , data will still remain in the external location while metadata is deleted.And you can easily get back the data by simply 
+running the DDL for table creation
+
+
+/*PARTITIONED TABLES*/
+
+/*Creating Partitioned table*/
+
+create table store_rev (store_id int,revenue double)
+partitioned by (dt string,location string)
+row format delimited fields terminated by ','
+stored as textfile;
+
+
+/*Loading Data into Partitioned table*/
+
+load data local inpath '/home/pathirippilly/local_data_sets/partition_test/input_20180902_CAL.txt' 
+into table pathirippilly_retail_db_txt.store_rev
+partition(dt='20180902',location='CAL');
+
+load data local inpath '/home/pathirippilly/local_data_sets/partition_test/input_20180902_NYR.txt' 
+into table pathirippilly_retail_db_txt.store_rev
+partition(dt='20180902',location='NYR');
+
+load data local inpath '/home/pathirippilly/local_data_sets/partition_test/input_20180909_CAL.txt' 
+into table pathirippilly_retail_db_txt.store_rev
+partition(dt='20180909',location='CAL');
+
+load data local inpath '/home/pathirippilly/local_data_sets/partition_test/input_20180909_NYR.txt' 
+into table pathirippilly_retail_db_txt.store_rev
+partition(dt='20180909',location='NYR');
+
+each partition column will create a directory.
+
+So here we will have dt column as parent most directory which will have sub directorie of different countries.
+each of the country directories will be one file each for that country-dt combination
+
+/*BUCKETING*/
+--normal user table
+create table usertab (id int,
+name varchar(50),
+age int)
+row format delimited fields terminated by ','
+stored as textfile; 
+
+load data local inpath '/home/pathirippilly/local_data_sets/bucket_test/user.txt' into table pathirippilly_retail_db_txt.usertab;
+
+--buckted user table
+create table bucketed_user (id int,
+name varchar(50),
+age int)
+clustered by (id) sorted by(id asc) into 4 buckets
+row format delimited fields terminated by ','
+stored as textfile;
+
+INSERT OVERWRITE TABLE bucketed_user SELECT * FROM usertab;
+
+--properties of bucketing:
+Basically, this concept is based on hashing function on the bucketed column. Along with mod (by the total number of buckets).
+
+i. Where the hash_function depends on the type of the bucketing column.
+
+ii. However, the Records with the same bucketed column will always be stored in the same bucket.
+
+iii. Moreover,  to divide the table into buckets we use CLUSTERED BY clause.
+
+iv. Generally, in the table directory, each bucket is just a file, and Bucket numbering is 1-based.
+
+v. Along with Partitioning on Hive tables bucketing can be done and even without partitioning.
+
+vi. Moreover, Bucketed tables will create almost equally distributed data file parts.
+
+Here from above query , hive will create 4 buckets , each of the buckets are filled based on hashing and modulo functions.
+We can not load data directly into a bucketed table, instead we need to load the data into a normal table first (here its usertab table)
+and then we need to load the buckted table from that temporary table(stage table)
+
+Clustering or bucketing can be implemented on a normal table while querying as follows (like partition by on a normal table without partitions)
+select * from usertab tablesample(bucket 1 out of 2 on id)
+select * from usertab tablesample(bucket 1 out of 4 on id)
+select * from usertab tablesample(bucket 1 out of 2 on rand()) --here bucketing is random 
+
+/*inserting partition tables*/
+
+For partitioned tables, you can specify the partition to insert into by supplying a PARTITION clause: 
+INSERT OVERWRITE TABLE target PARTITION (dt='2001-01-01') SELECT col1, col2  FROM source; 
+
+The OVERWRITE keyword means that the contents of the target table (for the first example) or 
+the 2001-01-01 partition (for the second example) are replaced by the results of the SELECT statement. 
+If you want to add records to an already-populated nonpartitioned table or partition, use INSERT INTO TABLE. 
+You can specify the partition dynamically by determining the partition value from the SELECT statement: 
+INSERT OVERWRITE TABLE target PARTITION (dt) SELECT col1, col2, dt  FROM source; 
+
+This is known as a dynamic-partition insert. This feature is off by default, so you need to enable it by setting hive.exec.dynamic.partition to true first.
+
+
+
+/*Multitable insert */
+
+In HiveQL, you can turn the INSERT statement around and start with the FROM clause for the same effect:
+ FROM source INSERT OVERWRITE TABLE target  SELECT col1, col2; T
+ 
+ he reason for this syntax becomes clear when you see that it’s possible to have multiple INSERT clauses in the same query. 
+ This so-called multitable insert is more efficient than multiple INSERT statements because the source table needs to be scanned only once to produce the multiple, disjoint outputs.
+ Here’s an example that computes various statistics over the weather dataset: 
+ 
+	 FROM records2 
+	 INSERT OVERWRITE TABLE stations_by_year  SELECT year, COUNT(DISTINCT station)  GROUP BY year 
+	 INSERT OVERWRITE TABLE records_by_year  SELECT year, COUNT(1)  GROUP BY year 
+	 INSERT OVERWRITE TABLE good_records_by_year  SELECT year, COUNT(1)  
+	 WHERE temperature != 9999    AND (quality = 0 OR quality = 1 OR quality = 4 OR quality = 5 OR quality = 9)  
+	 GROUP BY year;
+
+ There is a single source table (records2), but three tables to hold the results from three different queries over the source.
+ 
+ /* Altering Tables */
+ ALTER TABLE target ADD COLUMNS (col3 STRING); --Adding new column 
+ ALTER TABLE source RENAME TO target; --changing the name of the table 
+ 
+ /*Droping Table*/
+ 
+ The DROP TABLE statement deletes the data and metadata for a table. 
+ In the case of external tables, only the metadata is deleted; the data is left untouched. 
+ 
+ If you want to delete all the data in a table but keep the table definition (like DELETE or TRUNCATE in MySQL), 
+ you can simply delete the datafiles. For example: 
+ 
+dfs -rmr /user/hive/warehouse/my_table; 
+Hive treats a lack of files (or indeed no directory for the table) as an empty table
+
+Another possibility, which achieves a similar effect, is to create a new, empty table that has the same schema as the first, using the LIKE keyword: 
+CREATE TABLE new_table LIKE existing_table;
+
+
+/* ORDER BY v/s SORT BY*/
+order by will sort the entire table as a whole which is not at all suitable for a big table while  SORT BY produces a sorted file per reducer.
+In some cases, you want to control which reducer a particular row goes to, typically so you can perform some subsequent aggregation. This is what Hive’s DISTRIBUTE BY clause does.
+
+from customers_sample30
+select customer_id,customer_state,customer_city
+distribute by customer_state
+sort by customer_state asc,customer_city desc;
+
+This will group the customer_state and then sort the customer_city in desc. Also sort the customer_state as well.
+
+/*Complex Data types */
+create table temperature
+(date_time string,
+city string,
+mytemp array<double>)
+row format delimited fields terminated by  ',' collection items terminated by ','
+stored as textfile;
+
+ 
+load data local inpath '/home/pathirippilly/local_data_sets/complexData/temperature.txt' overwrite into table temperature;
+
+/*Windowing functions*/
+
+lead(column,n) over (partition by column_names order by column names [asc/desc]) : 
+this will give the nth leading value (next value of the order) for that particular column for every row under each partition window with respect to the order 
+where n is optional(if not provided, default value is 1)
+:
+example :
+select order_item_order_id,order_item_subtotal,
+lead(order_item_subtotal) ignore nulls over (partition by order_item_order_id
+order by order_item_subtotal desc) lead_val from orderitems limit 30;
+
+
+
+lag(column,n):this will give the nth lagging value(nth previous value) for that particular column for every row under each partition window with respect to the order 
+where n is optional(if not provided, default value is 1):
+eample:
+select order_item_order_id,order_item_subtotal,
+lag(order_item_subtotal) over (partition by order_item_order_id
+order by order_item_subtotal desc) lag_val from orderitems limit 30;
+
+
+first_value: 
+The FIRST_VALUE analytic function is similar to the FIRST analytic function, allowing you to return the first result from an ordered set
+The windowing clause can be used to alter the window of operation. The following second example uses "ROWS 1 PRECEDING" to give a result similar to a LAG of 1 row.
+example:
+select order_item_order_id,order_item_subtotal,first_value(order_item_subtotal) over (partition by order_item_order_id
+order by order_item_subtotal desc) first_val from orderitems limit 30;
+
+select order_item_order_id,order_item_subtotal,first_value(order_item_subtotal) over (partition by order_item_order_id
+order by order_item_subtotal desc ROWS 1 PRECEDING) first_val from orderitems limit 30;
+
+
+last_value:
+ return the last result from an ordered set. Using the default windowing clause the result can be a little unexpected.
+This is because the default windowing clause is "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+example :
+select order_item_order_id,order_item_subtotal,
+last_value(order_item_subtotal) over (partition by order_item_order_id
+order by order_item_subtotal desc) last_val from orderitems limit 30;
+
+
+Altering the windowing clause to "ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING" gives us the result we probably expected
+
+example:
+select order_item_order_id,order_item_subtotal,
+last_value(order_item_subtotal) over (partition by order_item_order_id
+order by order_item_subtotal desc ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) last_val from orderitems limit 30;
+
+
+
+
+
+

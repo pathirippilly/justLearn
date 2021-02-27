@@ -1,0 +1,87 @@
+FILE TO RDD and TO DF conversions (pyspark)
+************************************
+
+Through this blog, I am trying to explain different ways of creating RDDs from reading files and then creating Data Frames out of RDDs.
+
+
+This blog is for :
+
+pyspark (spark with Python) Analysts and all those who are interested in learning pyspark.
+
+Pre-requesties:
+
+Should have a good knowledge in python as well as should have a basic knowledge of pyspark
+
+
+RDD(Resilient Distributed Datasets):
+It is an immutable distributed collection of objects. This is the fundamental data structure of spark.By Default when you will read from a file using
+sparkContext, its converted in to an RDD with each lines as elements of type string.But this lacks of an organised structure
+
+Data Frames : 
+This is created actually for higher-level abstraction by imposing a structure to the above distributed collection.Its having rows and columns
+(almost similar to pandas).from  spark 2.3.x, Data frames and data sets are more popular and has been used more than RDDs.
+Learn in more detail here : https://data-flair.training/blogs/apache-spark-rdd-vs-dataframe-vs-dataset/
+
+
+Now lets start with File To RDD conversions
+
+
+
+FILE TO RDD conversions:
+
+1. A file stored in HDFS file system can be converted into an RDD using SparkContext itself.Since sparkContext can read the file directly from HDFS,
+it will convert the contents  directly in to a spark RDD (Resilient Distributed Data Set)
+in a spark CLI, sparkContext is imported as sc
+Example: Reading from a text file
+textRDD = sc.textFile("HDFS_path_to_text_file")
+
+2. A file stored in local File system can not be read by sparkContext directly. So we need to read it using core python APIs as list and then need to convert 
+it in to an RDD using sparkContext
+
+example:
+
+with open("local_path_to_file") as file:
+	file_list=file.read().splitlines() #this will convert each line of the file in to an element of list.Here file_list have each line of the file as string
+fileRDD = sc.parallelize(file_list) # This will convert the list in to an RDD where each element is of type string
+
+
+
+RDD to DF conversions:
+**********************
+RDD is nothing but a distributed collection.By Default when you will read from a file to an RDD, each line  will be an element of type string.
+DF (Data frame) is a structured representation of RDD. To convert an RDD of type string to a DF, we need to either convert the type of RDD elements 
+in to a tuple,list,dict or Row type
+
+As an Example, lets say a file orders containing 4 columns of data ('order_id','order_date','customer_id','status')  in which each column is delimited by Commas.
+And Let us assume, the file has been read using sparkContext in to an RDD (using one of the methods mentioned above) and RDD name is 'ordersRDD'
+
+Now let us convert the RDD in to DF:
+
+There are 4 ways:
+
+
+RDD to DF using tuples:
+
+ordersTuple=ordersRDD.map(lambda o: (int(o.split(",")[0]),o.split(",")[1],int(o.split(",")[2]),o.split(",")[3])) --Done
+ordersTuple.toDF(['order_id','order_date','customer_id','status'])
+
+DD to DF using Row:
+from pyspark.sql import Row;
+
+method1:
+ordersRow=ordersRDD.map(lambda o: Row(int(o.split(",")[0]),o.split(",")[1],int(o.split(",")[2]),o.split(",")[3]))
+ordersRow.toDF(['order_id','order_date','customer_id','status'])
+
+method2:
+ordersRow=ordersRDD.map(lambda o: Row(order_id=int(o.split(",")[0]),order_date=o.split(",")[1],customer_id=int(o.split(",")[2]),status=o.split(",")[3]))
+ordersRow.toDF()
+
+RDD to DF using List:
+
+ordersList=ordersRDD.map(lambda o: [int(o.split(",")[0]),o.split(",")[1],int(o.split(",")[2]),o.split(",")[3]])
+ordersList.toDF(['order_id','order_date','customer_id','status'])
+
+RDD to DF using dictionary (This is depricated and the similar method is using Row type. Even though still we can use it (verified in spark 2.3.1)):
+
+ordersDict=ordersRDD.map(lambda o: {'order_no':int(o.split(",")[0]),'order_date':o.split(",")[1],'customer_id':int(o.split(",")[2]),'status':o.split(",")[3]})
+ordersDict.toDF()

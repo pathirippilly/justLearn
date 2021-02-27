@@ -1,0 +1,446 @@
+Shell Script Zero to Hero
+******************************
+1.A shell script will have a series of commands that will be converted in to machine language by an interpretor
+
+2.Below are different samples of shell script on different interpretors:
+
+#! /bin/csh
+echo "this script uses csh as interpretor"
+
+#! /bin/ksh
+echo "this script uses ksh as interpretor"
+
+#! /bin/zsh
+echo "this script uses zsh as interpretor"
+
+#! /bin/bash
+echo "this script uses bash as interpretor"
+
+Above four shell script uses four different interpretors
+#! is called as shabang (sharp + bang)
+
+a) what ever followed by #! is the interpretor to which that script points to (or will be executed on)
+b) When you will run a shell script what actually happens is , the shell script being executed will be passed as an argument 
+to the interpretor used 
+
+3.Writing and executing a shell script:
+open a vi editor helloworld.sh:
+vi helloworld.sh
+
+add the below code , save and exit:
+#! /bin/bash
+echo "this script uses csh as interpretor"
+
+For executing any file in linux/unix, you need to give execute permission explicitely:
+
+chmod 755 helloworld.sh
+
+Now execute the shell scripts:
+./helloworld.sh
+
+4.If we are not specifying a shebang at the beginning of the script, it will be executed in the default shell of the user.
+
+5.Variables:
+Variables are usually decalred as below:
+VARIABLE_NAME="value"
+
+Variables are case sensitive,By convention, variables are upper case
+
+Always call the variable as follows:
+$VARIABLE_NAME
+
+if you want to prefix or suffix some info to the variable , you can use them in curley braces and inside that you can append
+
+VAR=BASH
+
+echo $VAR # this will give BASH as output
+echo ${VAR}ing  # this will give BASHing as output
+
+6.Tests:
+
+Conditional checks can be done as tests in Shell scripting. Tests always return boolean.
+We use it usually with if statements
+
+Syntax :
+[ condition-to-be-tested ]
+
+For example:
+
+we can check if a file exists or not as follows 
+
+if [ -e /etc/passwd ]
+then
+echo "file exists"
+else
+echo "file doesn't exist"
+
+Like this we have following tests for files:
+
+-d file : Checks if file is a directory; if yes, then the condition becomes true.
+-r file : Checks if file is readable; if yes, then the condition becomes true.
+-w file : Checks if file is writable; if yes, then the condition becomes true.
+-x file : Checks if file is executable; if yes, then the condition becomes true.
+-s file : Checks if file has size greater than 0; if yes, then condition becomes true.
+-e file : Checks if file exists; is true even if file is a directory but exists.
+
+Following are tests for String:
+
+-z String  : True if string is empty
+-n string : True if string is not empty
+STRING1 = STRING2 returns true of strings are equal
+STRING1 != STRING2 returns true of strings are not equal
+
+Arithmetic Operators:
+
+arg1 -eq arg2 : true if arg1 is equal to arg2
+arg1 -ne arg2 : true if arg1 is not  equal to arg2
+arg1 -lt arg2 :true if arg1 is less than arg2
+arg1 -le arg2 :true if arg1 is less than or equals arg2
+arg1 -gt arg2 :true if arg1 is greater than arg2
+arg1 -ge arg2 :true if arg1 is greater than or equals arg2
+
+7. Conditional Statements and Loops:
+
+if statemt:
+
+STRUCTURE:
+
+if [ Condition_to_check ]
+then
+action code gies here..
+elif [ condition_to_check ] #optional
+then
+action code goes here..
+else #optional
+action vode goes here...
+file
+
+
+example:
+Below code will check if a file exists and if it is a regular file
+
+code:
+
+#!/bin/bash
+
+file=$1
+if [[ -e $file ]] #checks for the existence of file/directory
+then
+echo "file exists"
+        if [ -f "$file" ] #check if its a regular file
+        then
+                echo "Its a regular file"
+        else
+                echo "Its not a regular file"
+        fi              
+else
+echo "file doesn't exist"
+fi
+
+I can finish the same in a much shorter form as follows:
+code:
+
+file="$1"
+
+if [ -e $file && -f $file ]
+then
+	echo "$file exists"
+else
+	echo "$file does not exist"
+fi
+
+
+
+Case statement :
+
+STRUCTURE:
+
+case word in
+   pattern1)
+      Statement(s) to be executed if pattern1 matches
+      ;;
+   pattern2)
+      Statement(s) to be executed if pattern2 matches
+      ;;
+   pattern3)
+      Statement(s) to be executed if pattern3 matches
+      ;;
+   *)
+     Default condition to be executed
+     ;;
+esac
+
+
+example:
+same file check exampe as case statement:
+
+file="$1"
+
+#!/bin/bash
+
+file="$1"
+echo $file
+flag=$([ -e $file -a -f $file ] && echo true || echo false)
+case $flag in 
+        true)
+        echo "$file exists"
+        ;;
+        false)
+        echo "$file does not exist"
+        ;;
+esac
+
+
+
+LOOPS:
+
+for loop:
+
+STRUCTURE:
+
+for var in word1 word2 ... wordN
+do
+   Statement(s) to be executed for every word.
+done
+
+example1:
+
+This will output from o to 9
+
+#!/bin/sh
+
+for var in 0 1 2 3 4 5 6 7 8 9
+do
+   echo $var
+done
+
+example2:
+This will output all files with .bash as beginning under $HOME directory
+
+#!/bin/sh
+
+for FILE in $HOME/.bash*
+do
+   echo $FILE
+done
+
+This will output 
+
+
+select loop:
+
+STRUCTURE:
+
+select var in word1 word2 ... wordN
+do
+   Statement(s) to be executed for every word.
+done
+
+
+This will first list the items in the select  and last prompt expect the user to input a selection based on the list.
+So we need to include an exit statement
+
+example:
+
+#!/bin/ksh
+
+select DRINK in tea cofee water juice appe all none
+do
+   case $DRINK in
+      tea|cofee|water|all) 
+         echo "Go to canteen"
+         ;;
+      juice|appe)
+         echo "Available at home"
+      ;;
+      none) 
+         break 
+      ;;
+      *) echo "ERROR: Invalid selection" 
+      ;;
+   esac
+done
+
+The menu presented by the select loop looks like the following −
+
+$./test.sh
+1) tea
+2) cofee
+3) water
+4) juice
+5) appe
+6) all
+7) none
+#? juice
+Available at home
+#? none
+$
+
+
+You can change the prompt displayed by the select loop by altering the variable PS3 as follows −
+
+$PS3 = "Please make a selection => " ; export PS3
+$./test.sh
+1) tea
+2) cofee
+3) water
+4) juice
+5) appe
+6) all
+7) none
+Please make a selection => juice
+Available at home
+Please make a selection => none
+$
+
+while loop:
+
+STRUCTURE:
+
+while command
+do
+   Statement(s) to be executed if command is true
+done
+
+Example:
+
+This is going to print from 0 to 9
+
+#!/bin/sh
+
+a=0
+
+while [ $a -lt 10 ]
+do
+   echo $a
+   a=`expr $a + 1`
+done
+
+
+until loop:
+
+The while loop is perfect for a situation where you need to execute a set of commands while some condition is true.
+Sometimes you need to execute a set of commands until a condition is true.
+
+STRUCTURE:
+
+until command
+do
+   Statement(s) to be executed until command is true
+done
+
+Example:
+
+This will print from 0 to 9
+
+#!/bin/sh
+
+a=0
+
+until [ ! $a -lt 10 ]
+do
+   echo $a
+   a=`expr $a + 1`
+done
+
+8.Reading user inputs:
+
+For reading user  inputs we can use 'read':
+
+example:
+Here user input will be asked on a new line of the prompt, since we have the prompt printed using echo
+
+#!/bin/bash
+echo "enter user name: "
+read name
+echo "enter age: "
+read age
+echo "$name is $age years old"
+
+But if we want the use to enter the input on the same line of the prompt we can use a flag -p with read:
+
+#!/bin/bash
+read -p "enter user name: " name
+read -p "enter age: " age
+echo "$name is $age years old"
+
+If we want to hide what user types (like password prompts in unix/linux environments) then we can use read -sp
+
+#!/bin/bash
+read -p "enter user name: " name
+read -sp "enter password: " pwd
+echo
+echo "$name loggen in successfully"
+
+If we want to read user inputs in to an array:
+
+#! /bin/bash
+read -p "enter names: " -a names 
+ 
+for i in ${names[*]} 
+do 
+        echo $i 
+done 
+
+if we are not proving any variable name for reading input, then the input that read will be stored in an in built variable calles REPLY
+
+#!/bin/bash
+read -p "enter user name: "
+echo "$REPLY"
+
+
+
+9. Assigning and accessing array elements :
+
+STRUCTURE:
+
+array_name[index]=value
+
+example:
+
+NAME[0]="Zara"
+NAME[1]="Qadir"
+NAME[2]="Mahnaz"
+NAME[3]="Ayan"
+NAME[4]="Daisy"
+
+
+If you are using the ksh shell, here is the syntax of array initialization −
+set -A array_name value1 value2 ... valuen
+
+If you are using the bash shell, here is the syntax of array initialization −
+array_name=(value1 ... valuen)
+
+After you have set any array variable, you access it as follows −
+
+${array_name[index]}
+
+example:
+
+#!/bin/sh
+
+NAME[0]="Zara"
+NAME[1]="Qadir"
+NAME[2]="Mahnaz"
+NAME[3]="Ayan"
+NAME[4]="Daisy"
+echo "First Index: ${NAME[0]}"
+echo "Second Index: ${NAME[1]}"
+
+You can access all the items in an array in one of the following ways −
+
+${array_name[*]}
+${array_name[@]}
+
+10.Passing arguments to a script
+
+Arguments passed to a script will be stored in to an array by default and its '@':
+You can access the array by calling it as :
+("$@")
+
+
+
+
+
+
+ 

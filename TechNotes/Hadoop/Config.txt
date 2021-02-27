@@ -1,0 +1,29 @@
+Configuration Related issues and solutions
+******************************************
+
+Topic:Configuring pom.xml for Hadoop
+
+issue 1 : missing artifact jdk.tools:jdk.tools:jar:1.6 error
+
+Reason:
+
+This issue crops up in one of the two scenarios:
+
+You do not have JDK installed and configured; or
+
+You've both JDK and JRE installed and JRE is getting precedence over the JDK path.
+
+Solution:
+As explained in this link by the team at 'Hadoop in the real world', you merely need to add the dependency to tools.jar in your pom.xml file.
+
+<dependency>
+<groupId>jdk.tools</groupId>
+<artifactId>jdk.tools</artifactId>
+<version>1.7.0_05</version>
+<scope>system</scope>
+<systemPath>${JAVA_HOME}/lib/tools.jar</systemPath>
+</dependency>
+
+If the error persists, then just change the path to tools.jar to an absolute path as shown below:
+
+<systemPath>C:/Program Files/Java/jdk1.8.0_65/lib/tools.jar</systemPath>

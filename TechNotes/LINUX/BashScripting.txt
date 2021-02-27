@@ -1,0 +1,138 @@
+BASH scripting
+**************
+1. shell
+
+cat /etc/shells --> this gives you what all shells you have
+which bash --> this gives you location of the bash 
+#! /bin/bash -- At the beginning of the shell script ,  this shebang will point script execution to respective shell
+
+
+2. reading user input 
+
+>>> different ways of user inputs are given below
+read --> this accept the user input. Input can be given in next line
+read -p --> accept the user input in the same line  
+read -sp --> secured prompt. keystrokes won't be displayed
+read -a --> accept input as array
+
+>>>if 'read' doeasn't have a variable followed by , then default bultin variable to which the user input goes is 'REPLY'
+
+
+3.script arguments
+
+>>>By default script arguments will be stored in variables such as $1 $2 $3
+note:$0 will always be the script name 
+
+>>>we can pass arguments as key word arguments as also. Example is as follows
+--inside script---
+#! /bin/bash
+echo $name $subject $marks
+--execution--
+name="akhil" subject="physics" marks="89" ./scriptWithArgument.sh
+
+
+
+>>>By default script arguments will be stored in an array "$@". So here we can pass n number of arguments
+
+--inside script---
+
+#! /bin/bash
+
+args=("$@")
+echo ${args[0]} ${args[1]} ${args[2]}
+                    
+--execution--
+./scriptWithArgument.sh "akhil" "physics" "89" 
+
+
+>>>we can store arguments or variables in a different file and that we can call in our script as below 
+
+--inside vaeiable file var.sh ---
+name="akhil"
+subject="PHY"
+marks=52
+
+--inside driver script scriptWithArgument.sh--
+#! /bin/bash
+
+. /home/azkaban/scripts/var.sh
+
+echo ${name} ${subject} ${marks}
+
+
+--execution--
+./scriptWithArgument.sh
+
+
+scenario:
+write a script which accepts name,subjects and marks in such a way that 'name' will have 1 name, subjects will have 3 subjects
+and marks will have 3 marks. Accept the values to  an array and print them
+
+#! /bin/bash
+
+name=$name
+IFS="," read  -r -a subs <<< "$subjects"
+IFS="," read -r -a marks <<< "$marks"
+
+echo $name has passed exams of ${subs[@]} with marks ${marks[@]}
+
+>>> Total number of arguments passed can be printed as below
+echo $#
+
+
+4.if else statement
+
+example:
+
+#! /bin/bash
+
+if [ $# = 0 ]
+then
+echo "no arguments"
+elif [ $# = 1 ]
+then
+echo "1 argument"
+else
+echo "more than 1 argument"
+fi
+
+5. Wrire a script to find if a file exists or not
+
+#! /bin/bash
+
+echo  -e "enter file name: \c"
+read filename
+if [ -e $filename ]
+then
+echo "$filename exists"
+else
+echo "$filename does not exist"
+fi
+
+note : 
+>> -e flag can be used for checking the existence of a file
+>> -f will check if its a regular file or not 
+>> -d will check if its a directory or not
+>> -b will check if its a binary file
+>> -c wlll check if its character special file 
+>> -s will check if the file is empty or not
+>> -r will check for read permission -w will check for write permission and -x will check for execute permission
+
+5. Append or overwrite a file
+
+echo "new line" > test.txt #this will overwrite the file if it exists or otherwise it will create
+echo "new line" >> test.txt #this will append the file if it exists or otherwise it will create
+cat > test.txt #this will overwrite the file if it exists or otherwise it will create. We can write multiple lines and once done we can exit from it by CTRL + d
+cat >> test.txt #this will append the file if it exists or otherwise it will create. We can write multiple lines and once done we can exit from it by CTRL + d
+
+01:14:27
+
+
+	
+
+
+
+ 
+
+
+                              

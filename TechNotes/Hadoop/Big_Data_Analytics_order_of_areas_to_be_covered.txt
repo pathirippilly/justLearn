@@ -1,0 +1,66 @@
+Python:
+
+Collections:List,tuple,set,dictionary
+****************************************
+1.Generating a collection using range()
+2.indexing
+3.slicing
+4.packing and unpacking a list
+5.Collection comprehensions (eg: list comprehension)
+6.Generators  vs collections
+7.adding and deleting single or multiple entries from a list
+
+Conditional statements and loop:
+****************************************
+
+1.if , nested if, case
+2.for,while
+3.implementing a do while in python (python doesn't have a do while,so the trick to mimick the same)
+4.looping over collections
+
+
+
+
+Functions:
+***************
+Built in:
+
+lambda 
+map
+filter
+reduce
+sorted
+collection.sort()
+
+UDF (user defined):
+1.How to declare a functions
+2.diference between yeild and return
+3.args and kwargs
+4.knowing recursive function is a Bonus (not mandatory)
+
+File handling Basics(eventhough we don't use it much often in spark):
+**********************
+1.Open,read,write 
+2.Delete a file from a particular directory(using os library)
+3.Familiar with csv module
+
+Libraries:
+**************
+Some basics on below libraries(not used so often in spark):
+
+os (creating a directory, removing a directory,checking if a file exists in a directory etc )
+calendar(extracting year alone, month alone,date alone,week alone etc)
+time (time to unix time conversion,time format change,string to date conversion)
+csv
+good knowledge on below libraries (refer this course by jose Portilla : Python-for-data-science-and-machine-learning-bootcamp):
+numpy
+Pandas
+
+After this you can start the CCA 175 course(either use my access to the lab or purchase a 1 month access for 1000 rs. If you are using mine , please inform me when ever you use it) 
+
+
+
+
+
+
+

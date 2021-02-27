@@ -1,0 +1,159 @@
+SPARK PERFORMANCE TUNING AND ADVANACED TOPICS
+************************
+
+1. Upsert on high volume tables using dynamic partition
+
+configure spark.sql.dynamicPartition.enabled=True
+scenario:
+we have a target table which is getting updated daily/weekly/monthly using a upsert logic.
+So to implement upsert logic , the activity is as follows:
+
+Source Table : tab_src
+Target Table : tab_tgt
+
+a. tab_tgt is partitioned on a column, say part_col1
+b. so we will be getting distinct part_col1 values for every load from tab_src first
+Then we will get the data from target for only those specific part_col1 values which we got from tab_src
+and will load in to a temp table, say tab_tgt_temp
+c.We will perform a full outer join between tab_tgt_temp and tab_src and will do a insert overwrite of both new and updated records 
+ over  tab_tgt on those partitions alone.
+
+here since target table is partitioned and we are only selecting a  set of partitions from target while doing the upsert , we are not processing the entire data in
+target  table. Thus we can improve the performance
+
+2.Dynamic Partition Pruning
+***************************
+Dynamic partition pruning improves job performance by more accurately selecting the specific partitions within a table that need to be read and processed for a specific query
+By reducing the amount of data read and processed, significant time is saved in job execution. With Amazon EMR 5.26.0, this feature is enabled by default. With Amazon EMR 5.24.0 and 5.25.0, you can enable this feature by setting the Spark property 
+spark.sql.dynamicPartitionPruning.enabled from within Spark or when creating clusters.
+
+This optimization improves upon the existing capabilities of Spark 2.4.2, which only supports pushing down static predicates that can be resolved at plan time.
+The following are examples of static predicate push down in Spark 2.4.2.
+
+partition_col = 5
+
+partition_col IN (1,3,5)
+
+partition_col between 1 and 3
+
+partition_col = 1 + 3
+
+
+Dynamic partition pruning allows the Spark engine to dynamically infer at runtime which partitions need to be read 
+and which can be safely eliminated. For example, the following query involves two tables: the store_sales table that 
+contains all of the total sales for all stores and is partitioned by region, and the store_regions table that contains a
+ mapping of regions for each country. The tables contain data about stores 
+distributed around the globe, but we are only querying data for North America.
+
+select ss.quarter, ss.region, ss.store, ss.total_sales 
+from store_sales ss, store_regions sr
+where ss.region = sr.region and sr.country = 'North America'
+
+
+Without dynamic partition pruning, this query will read all regions before filtering out the subset of regions that match the results of the subquery.
+With dynamic partition pruning, this query will read and process only the partitions for the regions returned in the subquery. 
+This saves time and resources by reading less data from storage and processing less records.
+
+
+3.Flattening Scalar Subqueries
+***********************************
+
+
+This optimization improves the performance of queries that have scalar subqueries over the same table.
+ With Amazon EMR 5.26.0, this feature is enabled by default. With Amazon EMR 5.24.0 and 5.25.0, you can enable it by setting the Spark property 
+ spark.sql.optimizer.flattenScalarSubqueriesWithAggregates.enabled from within Spark or when creating clusters. 
+ When this property is set to true, the query optimizer flattens aggregate scalar subqueries that use the same relation if possible. 
+ The scalar subqueries are flattened by pushing any predicates present in the subquery into the aggregate functions and then performing one aggregation, 
+ with all the aggregate functions, per relation.
+
+Following is a sample of a query that will benefit from this optimization.
+
+select (select avg(age) from students                    /* Subquery 1 */
+                 where age between 5 and 10) as group1,
+       (select avg(age) from students                    /* Subquery 2 */
+                 where age between 10 and 15) as group2,
+       (select avg(age) from students                    /* Subquery 3 */
+                 where age between 15 and 20) as group3
+				 
+				 
+The optimization rewrites the previous query as:
+
+select c1 as group1, c2 as group2, c3 as group3
+from (select avg (if(age between 5 and 10, age, null)) as c1,
+             avg (if(age between 10 and 15, age, null)) as c2,
+             avg (if(age between 15 and 20, age, null)) as c3 from students);
+			 
+
+Notice that the rewritten query reads the student table only once, and the predicates of the three subqueries are pushed into the avg function.
+
+
+4. 3 common joins (Broadcast hash join, Shuffle Hash join, Sort merge join) explained
+****************************************************************************************
+
+https://www.linkedin.com/pulse/spark-sql-3-common-joins-explained-ram-ghadiyaram/
+
+
+BroadCast Hash Join:
+
+https://stackoverflow.com/questions/37487318/spark-sql-broadcast-hash-join
+
+Here spark will sent the smaller table involved in join to each executor nodes.
+This is what called map side join. So it can avoid the multiple shuffle operations otherwise would have been involved
+Table needs to be broadcast less than  spark.sql.autoBroadcastJoinThreshold the configured value, default 10M (or add a broadcast join the hint)
+
+example of adding a broadcast hint:
+
+DATAFRAME:
+
+from pyspark.sql.functions import broadcast
+
+small_df = ...
+large_df = ...
+
+large_df.join(broadcast(small_df), ["foo"])
+or broadcast hint (Spark >= 2.2):
+
+large_df.join(small_df.hint("broadcast"), ["foo"])
+
+SPARK SQL:
+
+You can use hints (Spark >= 2.2):
+
+SELECT /*+ MAPJOIN(small) */ * 
+FROM large JOIN small
+ON large.foo = small.foo
+or
+
+SELECT /*+  BROADCASTJOIN(small) */ * 
+FROM large JOIN small
+ON large.foo = small.foo
+or
+
+SELECT /*+ BROADCAST(small) */ * 
+FROM large JOIN small
+ON larger.foo = small.foo
+
+
+
+When the dimension table and the fact table for the Join operation, in order to avoid shuffle, 
+we can be limited size of the dimension table of all the data distributed to each node for the fact table to use. 
+executor all the data stored in the dimension table, to a certain extent, 
+sacrifice the space, in exchange for shuffle operation a lot of time-consuming, which in SparkSQL called Broadcast Join
+
+
+This algorithm can only be used to broadcast smaller tables, otherwise the redundant transmission of data is much greater than the cost of shuffle; 
+In addition, the broadcast needs to be broadcast-ed to the driver of the collector, 
+when there are frequent broadcast, the driver's Memory is also a test.
+
+5.Using Broadcast variables
+******************************
+
+https://blog.knoldus.com/broadcast-variables-in-spark-how-and-when-to-use-them/
+https://stackoverflow.com/questions/41580725/what-is-the-disadvantages-of-spark-broadcast-variable
+
+
+
+
+
+
+

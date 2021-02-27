@@ -1,0 +1,23 @@
+Installing Vbox Guest Addition in Kali Linux on Vbox
+******************************************************
+Open your Terminal is Guest OS:
+Enter below commands
+
+apt-get update
+
+apt-get install -y virtualbox-guest-x11
+
+reboot
+
+Create a folder in your desired location of Host OS :  say 'wd'
+
+select this folder as  shared folder from Devices>Shared_Folder section >Check both Auto-Mount and Create-Permenantly and click ok
+
+After this Go to your desired location in guest OS and create a directory with name of your choice say 'share'
+
+mkdir share
+
+Now from this location in terminal,enter below command
+
+sudo mount -t vboxsf wd  ~/share/
+

@@ -1,0 +1,126 @@
+Q1: Let's say 's' is a user input string and 'n' is a user input number which is less than  the length of the string.
+Define a function which will accept both the user input as argument and 
+split the input string in to multiple substrings each of n length seperated by a space character.
+
+	example:
+	lets say s="abcdefghij"
+	and n=3
+	then functions strsplit(s,n) should return 
+	abc def ghi j
+
+solution1:
+
+def strsplit(s,n):
+ ln=len(s)
+ r=ln%n
+ for i in range(ln):
+  if (i+1)%n==0:
+   print(s[(i-(n-1)):i+1])
+  elif (i==(ln-r)):
+   print(s[i:])
+
+	solution2:(OPTIMIZED)
+	def strsplit(s,n):
+	 ln=len(s)
+	 for i in range(0,ln,n):
+	   print(s[i:i+n],end=" ")
+	 
+
+def strsplit(s,n):
+ ln=len(s)
+ snew=""
+ for i in range(0,ln,n):
+  yield s[i:i+n]
+  
+Q2:
+lets say I am having a sequential list of whole numbers which are not ordered. I am having a number missing from that sequence which makes the sequence incomplete.
+This missing number is neither the minimum nor the maximum. what is the opyimized way of finding this number.
+approach1:
+
+l=[1,5,8,2,7,9,4,6]
+mx=max(l)
+mn=min(l)
+d={}
+for  i in range(mn,mx):
+	d[i]=False
+for i in l:
+	l[i]=True
+list(filter(lambda x :x[1]==False , d.items()))[0][0]
+
+approach2:
+if min is always 1 then,
+n=len(l)+1
+sm  = n*(n+1)/2 #sum of n natural numbers
+num_missing=sm-sum(l)
+
+
+Q3: Print prime numbers from 1-100
+
+method :usning recursive function
+
+def prim(c,v):
+ if c in [0,1] or c<0:
+  return 0
+ elif v>2:
+  if c%(v-1)==0:
+   return 0
+  else:
+   return prim(c,v-1)
+ else:
+  return 1
+
+
+  
+Q4: First non-repeating character of a string
+lets consider a='abcabcdeefedg', first non-repeating character in this string is 'f'
+Define a function which accepts a string of any length as an argument and return the first non-repeating charcter
+
+  
+def repeating(a):
+ l=[]
+ sz=len(a)
+ for i in range(sz):
+  if a[i] not in l:
+   for j in range(sz):
+    if i!=j and a[i]==a[j]:
+     l.append(a[i]) 
+     break
+    elif j==sz-1 and a[i]!=a[j]:
+     return a[i]
+	 
+	 
+Q5: Fibonacci series using iterator
+
+class fibonacci:
+ def __init__(self,outbound=1):
+  self.outbound=outbound
+ def __iter__(self):
+  self.n=1
+  self.out=0
+  return self
+ def __next__(self):
+  self.out_prev=self.out
+  if self.n<=self.outbound:
+   if self.outbound==0:
+    raise StopIteration
+   elif self.outbound<=2:
+	self.n=self.n+1
+	return self.out
+   else:
+    self.out=self.out+self.out_prev
+    self.n=self.n+1
+    return self.out
+  else:
+   raise StopIteration	
+
+
+  
+  
+	
+   
+
+	   
+	 
+
+	
+		

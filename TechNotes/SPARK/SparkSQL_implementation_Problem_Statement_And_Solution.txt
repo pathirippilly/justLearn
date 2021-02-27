@@ -1,0 +1,53 @@
+Problem Statement(Implement using sparkSQL) :
+
+
+Get daily revenue by product considering completed and closed orders.
+
+Data need to be sorted in ascending order by date and then descending
+order by revenue computed for each product for each day.
+
+Data for orders and order_items is available in HDFS
+
+/public/retail_db/orders and /public/retail_db/order_items
+
+Data for products is available locally under /data/retail_db/products
+
+Final output need to be stored under HDFS location – avro format
+
+/user/YOUR_USER_ID/daily_revenue_avro_python
+HDFS location – text format
+
+/user/YOUR_USER_ID/daily_revenue_txt_python
+Local location /home/YOUR_USER_ID/daily_revenue_python
+
+Solution need to be stored under
+/home/YOUR_USER_ID/daily_revenue_python.txt
+
+
+code:
+from pyspark.sql import Row
+productlist = open("/data/retail_db/products/part-00000").read().splitlines()
+productRDD = sc.parallelize(productlist).map(lambda p : Row(product_id=int(p.split(",")[0]),product_name=p.split(",")[2]))
+productDF=productRDD.toDF()
+
+/*register as temp tables*/
+productDF.registerTempTable("products")
+
+/* we are going to switch the HIve Database using sqlContext to our DB from default and then we will be using products table as temp table 
+and orders,orderitems as hive internal tables*/
+
+sqlContext.sql("use pathirippilly_retail_db_txt")
+sqlContext.setConf("spark.sql.shuffle.partitions","2") #No of shuffler tasks can be set using this
+
+
+daily_rev=sqlContext.sql("select o.order_date,p.product_name,round(sum(oi.order_item_subtotal),2) daily_revenue_per_product \
+from orderitems oi \
+inner join orders o on (oi.order_item_order_id=o.order_id) \
+inner join products p on (p.product_id=oi.order_item_product_id) \
+where (o.order_status='CLOSED' or o.order_status='COMPLETE') \
+group by o.order_date,p.product_name \
+order by o.order_date,daily_revenue_per_product desc")
+
+sqlContext.sql("create database pathirippilly_daily_revenue")
+sqlContext.sql("create table pathirippilly_daily_revenue.daily_revenue (order_date string,product_name string,daily_revenue_per_product float) stored as orc")
+daily_rev.insertInto("pathirippilly_daily_revenue.daily_revenue")

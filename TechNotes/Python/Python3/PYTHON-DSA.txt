@@ -1,0 +1,133 @@
+PYTHON-DSA
+***********
+
+REFRESHING PYTHON:
+
+STRINGS:
+
+>>strings are immutable. So if we are re assigning a string means you are actually re assigning the memory location.To know that just check below piece of code
+a="abcbhsjh"
+print(id(a)) # this is the first memory location to which this variable is pointing 
+a="bshvxjss"
+print(id(a)) # this is the new memory location to which this variable is pointing 
+
+so here it actually didn't modified the string in memory location Instead it re assigned the memory location itself
+
+>> Strings indexing and Slicing
+
+Each string has a forward index and reverse index.
+Forward index starts from zero while reverse index starts from -1
+
+every character in a string of length 'L'  and forward index of M will be having a  reverse index of M-L
+
+
+
+a="abcbhsjh"
+a[0] >> "a"
+len(s) >> 8
+a[len(s)] and a[len(s)-1] , both will give the last element of the string . Python won't throw index out of bound exception
+a[m:n:s] will give you a substrig starting from m th index to (n-1)th index with a slice step  of s , providing all m,n,s are integers and n<>0. If n=0 ,it will throw error 
+"slice step can not be zero"
+
+example:
+a[0:5:1] >> "abcbh" will be the output (index 0 to index 4 )
+a[0:-5:] >> "abc" will be the output (index 0 to (len(a)-5)th index) which will be equalent to a[0:3]
+a[::-1] >> "hjshbcba" will be the output : this will print strings from len(a)-1 to 0th index in reverse order a[::-1]  and 
+a[7::-1] are equalent since by default start pos m=len(a)-1  and end pos = -len(a)-1 if slice n<0
+a[7:-6:-1] : "hjshb" will be output : starting from 7th index till (len(s)-6)th  index with a slice step of 1 in reverse order 
+
+for i in range(0,len(a),n):
+
+
+a[1]='a' >> this is not allowed since string objects are immutable and item assignement can not be done
+
+
+>>split the string in to list of words
+s="bkasjdbjks kjdbjksd ksajdjsab"
+s.split() will give you ['bkasjdbjks','kjdbjksd','ksajdjsab']
+'split' by default takes white space as delimiter
+
+>>method v/s function:
+
+A method in python is somewhat similar to a function, except it is associated with object/classes. 
+Methods in python are very similar to functions except for two major differences.
+The method is implicitly used for an object for which it is called. 
+The method is accessible to data that is contained within the class
+
+>>'dir' function
+if you pass an object to dir() as an argument, you can get all the methods associated with this
+a="abcbhsjh"
+dir(a) >> this will give you all methods associated with a string type.
+
+
+re module
+********************
+
+raw strings:
+raw strings will  handle back slashes as a normal character
+eg:
+s1="\t is TAB"
+s2=r"\t is TAB"
+print(s1) : This will print TAB (4 space characters) instead of '\t' as a string character followed by 'TAB'.
+output : "	is TAB"
+print(s1) : This will print  '\t' as a string character followed by 'TAB'.
+output : "\t ABCDEFGHIJKLMNOPQRSTUVWXYZis TAB"
+
+
+. Any Character Except New Line
+\d Digit (0-9)
+\D Not a Digit (0-9)
+\w Word Character (a-z, A-Z, 0-9, _)
+\W Not a Word Character
+\s Whitespace (space Tab NewLine)
+\S Not While Space (space Tab NewLine)
+\b - Word Boundary
+\B - Not a word Boundary
+
+
+
+Time Compexity and Big O Notation:
+*********************************
+
+Linear Time Compexity - O(n)
+Constant Time Compexity -  O(1)
+Quadratic Time Compexity - O(n**2)
+
+
+Linear Time Compexity:
+
+T =  an + b ~ O(n) (since 'an' is the fastest growing term in this)
+
+Quadratic Time Compexity
+T= cn**2 + dn + c ~(since cn**2 is the fastest growing term) 
+
+Closure
+*******
+
+A closure is inner function that remembers and access to variables in the 
+local scope in which it was created even after the outer function 
+has finished executing
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+

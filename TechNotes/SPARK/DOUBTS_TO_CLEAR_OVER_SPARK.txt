@@ -1,0 +1,115 @@
+1. How we can do UPSERT logic over a huge volume table which we can not partition on any column
+25-11-55
+15-01-60
+P@yr0ll1
+
+80D - Parental insurance
+
+Reliance Insurance - 30K
+Folio Number  : 499187647634
+
+
+
+1 TB file -> what is  the cluster config
+2 INSERT OVERWRITE SQL is running over an external table --> you are dropping the table what will happen
+3 10N,16C/N,64GB RAM/Node
+4.parquet v/s orc v/s avro : Done
+5 Catylst Optimiser : Overview is done
+6.Splittable v/s non-splittable : Done
+7.Default no of partitions in spark dataframe
+8.Accumulator , broadcast variable
+9.tungsten optimisation
+10.Explode and lateralview
+11.Collect_set, collect_list
+12.Fault tolerance v/s high availability
+
+Compact and bit map indexing
+singleton python class
+
+
+
+REGEXP_REPLACE
+
+
+
+
+1.anagram and panagram
+2.Wrapper functions 
+
+
+
+SELECT empno, ename, sal
+  FROM emp e1
+ WHERE 
+ 2 = (SELECT COUNT(DISTINCT(sal)) 
+ FROM emp e2 WHERE e2.sal >= e1.sal);
+ 
+EMPno  	SAL
+*****	****
+1		1234
+2		3215
+3		1125
+4		3354
+
+
+
+
+
+Only ORC and Parquet have the necessary features
+
+Predicate pushdown where a condition is checked against the metadata to see if the rows need to be read.
+Column projection to only read the bytes for the necessary columns.
+ORC can use predicate pushdown based on either:
+
+min and max for each column
+optional bloom filter for looking for particular values
+Parquet only has min/max. ORC can filter at the file level, stripe level, or 10k row level. Parquet can only filter at the file level or stripe level.
+
+The previous answer mentions some of Avro's properties that are shared by ORC and Parquet:
+
+They are both language neutral with C++, Java, and other language implementations.
+They are both self describing.
+They are both splittable when compressed.
+They both support schema evolution.
+
+
+https://nxtgen.com/hadoop-file-formats-when-and-what-to-use
+
+
+
+read table
+MD5 on attribute column
+
+src lef join tgt where tgt column is null --> insert withColumn("I")
+src lef join tgt where tgt column is not null  --> 'U'
+INSERT "I"
+
+
+1. pytest 
+2. Dynamic dataframe
+3. AWS lambda time out
+4.PyAthena and PyTest
+5. OOPS in Python 
+
+
+1.Partition size is higher than executor memory  
+2.Shuffled data written size is greater that individual EBS storage
+3.1 TB , each node is 60GB*4 master node is 500GB
+4. what is the EBS storage  you are using
+5. default resource wait time 
+6. if one job is running which consumed certain amount of resources and another job is submitted which consumed the rest of resoiurces , then how yarn will behave
+
+
+
+
+
+
+
+
+
+  
+
+		
+ 
+ 
+ 

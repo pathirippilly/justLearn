@@ -1,0 +1,402 @@
+FLUME KAFKA AND SPARK for streaming 
+************************************
+
+FLUME
+********
+
+Apache Flume is a distributed, reliable, and available system for efficiently collecting, aggregating and moving large amounts of log data from 
+many different sources to a centralized data store.
+
+user guide:
+
+https://flume.apache.org/FlumeUserGuide.html
+
+A flume data flow three components for a single agent. And there can be multiple agents
+
+source:
+A Flume source consumes events delivered to it by an external source like a web server. The external source sends events to 
+Flume in a format that is recognized by the target Flume source. For example, an Avro Flume source can be used to 
+receive Avro events from Avro clients or other Flume agents in the flow that send events from an Avro sink
+
+channel:
+When a Flume source receives an event, it stores it into one or more channels. The channel is a passive store 
+that keeps the event until it’s consumed by a Flume sink. 
+The file channel is one example – it is backed by the local filesystem
+
+
+sink:
+The sink removes the event from the channel and puts it into an external repository like HDFS (via Flume HDFS sink) 
+or forwards it to the Flume source of the next Flume agent (next hop) in the flow. 
+
+The source and sink within the given agent run asynchronously with the events staged in the channel.
+
+single-node Flume deployment:
+******************************
+
+This configuration lets a user generate events and subsequently logs them to the console.
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = r1
+a1.sinks = k1
+a1.channels = c1
+
+# Describe/configure the source
+a1.sources.r1.type = netcat
+a1.sources.r1.bind = localhost
+a1.sources.r1.port = 44444
+
+# Describe the sink
+a1.sinks.k1.type = logger
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel = c1
+
+netcat:
+netcat is known as the TCP/IP swiss army knife. From the netcat man page: netcat is a simple unix utility which reads and writes data across network connections, 
+using TCP or UDP protocol. 
+It is designed to be a reliable "back-end" tool that can be used directly or easily driven by other programs and scripts
+
+logger:
+The logger usually refers to the usage of a class in log4j. The logger is a member object whose function e.g. severe is called. The logger usually logs into a file 
+(this can be configured through log4j.xml
+or some other config file or during the program 
+
+This configuration defines a single agent named a1. a1 has a source that listens for data on port 44444,
+ a channel that buffers event data in memory, and a sink that logs event data to the console. 
+ The configuration file names the various components, then describes their types and configuration parameters. 
+ A given configuration file might define several named agents; 
+ when a given Flume process is launched a flag is passed telling it which named agent to manifest.
+
+Given this configuration file, we can start Flume as follows:
+
+bin/flume-ng agent --conf conf --conf-file example.conf --name a1 -Dflume.root.logger=INFO,console
+
+Note that in a full deployment we would typically include one more option: --conf=<conf-dir>. The <conf-dir> directory would include a shell script 
+flume-env.sh and potentially a log4j properties file. In this example, we pass a Java option to force Flume to log to 
+the console and we go without a custom environment script.
+
+From a separate terminal, we can then telnet port 44444 and send Flume an event:
+
+telnet localhost 44444
+
+Type anything and hit enter , the same message wil be recieved by flume source using netcat and logger will log it on the console from channel
+
+
+
+Get Data from web server logs to HDFS 
+****************************************
+
+source used is : exec
+link: https://flume.apache.org/FlumeUserGuide.html#exec-source
+
+Exec source runs a given Unix command on start-up and expects that process to continuously produce data on standard out (stderr is simply discarded,
+ unless property logStdErr is set to true). If the process exits for any reason, the source also exits and will produce no further data.
+ This means configurations such as cat [named pipe] or tail -F [file] are going to produce the desired results where as date will probably not - 
+the former two commands produce streams of data where as the latter produces a single event and exits.
+
+sink used is : HDFS sink
+
+This sink writes events into the Hadoop Distributed File System (HDFS). It currently supports creating text and sequence files. 
+It supports compression in both file types. The files can be rolled (close current file and create a new one) periodically based on 
+the elapsed time or size of data or number of events. It also buckets/partitions data by attributes like timestamp or machine 
+where the event originated. The HDFS directory path may contain formatting escape sequences that will replaced by the HDFS sink to 
+generate a directory/file name to store the events. Using this sink requires hadoop to be installed so that Flume can use the Hadoop jars to 
+communicate with the HDFS cluster. Note that a version of Hadoop that supports the sync() call is required.
+
+channel used is : memory
+
+The events are stored in an in-memory queue with configurable max size. It’s ideal for flows that need higher throughput and are prepared 
+to lose the staged data in the event of a agent failures
+
+environemnet simulating the webserver logs : gen_logs
+this is a python based tool for generating logs
+
+In cloudera quickstart VM, this is usually stored under /opt/gen_logs
+
+under this path we can see tail_logs.sh,stop_logs.sh,start_logs.sh
+
+apart from this we have a directory named logs.
+
+logs will go to this directory by default
+
+
+difference between tail -f and tail -F:
+
+https://unix.stackexchange.com/questions/291932/what-is-the-difference-between-tail-f-and-tail-f/291935
+
+
+Changing the source to exec and running :
+
+1. create a directory /home/pathirippilly/flume_demo
+2. save the file wshdfs.conf as with below content
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+wh.sources = ws
+wh.sinks = k1
+wh.channels = mem
+
+# Describe/configure the source
+wh.sources.ws.type = exec
+wh.sources.ws.command =  tail -F /opt/gen_logs/logs/access.log
+# Describe the sink
+wh.sinks.k1.type = logger
+
+# Use a channel which buffers events in memory
+wh.channels.mem.type = memory
+wh.channels.mem.capacity = 1000
+wh.channels.mem.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+wh.sources.ws.channels = mem
+wh.sinks.k1.channel = mem
+
+3.Note that here we are changing the source only . source is now exec , sink is logger and channel is memory
+Now run the flume-agent as below
+
+flume-ng agent -n wh -f /home/pathirippilly/flume_demo/wslogstohdfs/wshdfs.conf
+
+now exec source will start reading logs from access.log file and display it on console
+
+changing the sink to hdfs and running:
+
+link: https://archive.cloudera.com/cdh5/cdh/5/flume-ng/FlumeUserGuide.html#hdfs-sink
+
+1. edit the wshdfs.conf file and change the sink type to hdfs as well as add the fully qualified hdfs path wehere log files need to be created
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+wh.sources = ws
+wh.sinks = hd
+wh.channels = mem
+
+# Describe/configure the source
+wh.sources.ws.type = exec
+wh.sources.ws.command =  tail -F /opt/gen_logs/logs/access.log
+# Describe the sink
+wh.sinks.hd.type = hdfs
+wh.sinks.hd.hdfs.path =  hdfs://nn01.itversity.com:8020/user/pathirippilly/flume_demo
+
+# Use a channel which buffers events in memory
+wh.channels.mem.type = memory
+wh.channels.mem.capacity = 1000
+wh.channels.mem.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+wh.sources.ws.channels = mem
+wh.sinks.k1.channel = mem
+
+Now run the agent again
+
+2.Now if you check on hdfs://nn01.itversity.com:8020/user/pathirippilly/flume_demo , you can find small files with 'flume_data' as prefix and unix time as suffix has been created 
+here. evry in-use file is of .tmp extension and with respect to the hdfs.rollInterval,hdfs.rollSize,hdfs.rollCount, this in-use file will be rolled up in to a log file 
+As of now we have left these properties as default. Now we will start with changing the properties
+
+adding hdfs.filePrefix,hdfs.fileSuffix,hdfs.rollInterval,hdfs.rollSize,hdfs.rollCount and hdfs.fileType:
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+wh.sources = ws
+wh.sinks = hd
+wh.channels = mem
+
+# Describe/configure the source
+wh.sources.ws.type = exec
+wh.sources.ws.command =  tail -F /opt/gen_logs/logs/access.log
+# Describe the sink
+wh.sinks.hd.type = hdfs
+wh.sinks.hd.hdfs.path =  hdfs://nn01.itversity.com:8020/user/pathirippilly/flume_demo
+wh.sinks.hd.hdfs.filePrefix = flumedemo #this will be prefixed for the output log file
+wh.sinks.hd.hdfs.fileSuffix = .txt #text file as output
+wh.sinks.hd.hdfs.rollInterval = 120 # 2 mins max to roll the file from in-use .tmp to .txt file , this property will be ignored if set to 0.
+wh.sinks.hd.hdfs.rollSize = 1048576 # 1 mb max  to roll the file from in-use .tmp to .txt file , this property will be ignored if set to 0.
+wh.sinks.hd.hdfs.rollCount = 1000 # 1000 records max   to roll the file from in-use .tmp to .txt file , this property will be ignored if set to 0.
+wh.sinks.hd.hdfs.fileType=DataStream # by default this will be sequenceFile so we will get the binary characters as output. to get a proper log, we will set it as Datastream
+
+# Use a channel which buffers events in memory
+wh.channels.mem.type = memory
+wh.channels.mem.capacity = 1000
+wh.channels.mem.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+wh.sources.ws.channels = mem
+wh.sinks.k1.channel = mem
+
+Regarding memory as channel :
+ link : https://archive.cloudera.com/cdh5/cdh/5/flume-ng/FlumeUserGuide.html#memory-channel
+
+The events are stored in an in-memory queue with configurable max size. It’s ideal for flows 
+that need higher throughput and are prepared to lose the staged data in the event of a agent failures.
+
+capacity and transactionCapacity are the major properties of memory channel.Values given to these properties have a good impact on fault tolerance of the channel.
+
+Capacity: 	The maximum number of events stored in the channel
+transactionCapacity : 	The maximum number of events the channel will take from a source or give to a sink per transaction
+
+By default both are 100. But we always set capacity a higher value than transactionCapacity.
+(mostly transactionCapacity is given a value less than or equal to half of the Capacity)
+
+
+KAFKA
+******
+link : https://kafka.apache.org/documentation/
+
+Kafka is a distributed streaming platform
+
+A streaming platform has three key capabilities:
+
+Publish and subscribe to streams of records, similar to a message queue or enterprise messaging system.
+Store streams of records in a fault-tolerant durable way.
+Process streams of records as they occur.
+
+Kafka is generally used for two broad classes of applications:
+
+Building real-time streaming data pipelines that reliably get data between systems or applications
+Building real-time streaming applications that transform or react to the streams of data
+
+
+First a few concepts:
+
+Kafka is run as a cluster on one or more servers that can span multiple datacenters.
+
+The Kafka cluster stores streams of records in categories called topics.
+
+Each record consists of a key, a value, and a timestamp.
+
+
+
+Kafka has four core APIs:
+
+The Producer API allows an application to publish a stream of records to one or more Kafka topics.
+
+The Consumer API allows an application to subscribe to one or more topics and process the stream of records produced to them.
+
+The Streams API allows an application to act as a stream processor, consuming an input stream from one or more topics and 
+producing an output stream to one or more output topics, effectively transforming the input streams to output streams.
+
+The Connector API allows building and running reusable producers or consumers that connect Kafka topics to existing applications 
+or data systems. For example, a connector to a relational database might capture every change to a table.
+
+for using  shell scripts given for creating a topic,we need to add the bin folder path to those scripts in the PATH variable in ~/.bash_profile:
+
+export KAFKA_HOME=/usr/hdp/2.5.0.0-1245/kafka
+PATH=$PATH:$KAFKA_HOME/bin
+export PATH
+
+then run it as below (one-time) (or just reconnect to the terminal):
+.~/.bash_profile
+
+
+Creating a topic:
+
+For creating a topic, we need to use zookeeper service:
+ZooKeeper is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services
+
+In a single node-cluster, we can run it on our local host as below:
+
+kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+But in a multinode cluster , we need to give the ip and port of the zookeper nodes with comma seperated:
+
+kafka-topics.sh --create --zookeeper nn01.itversity.com:2181,nn02.itversity.com:2181,rm01.itversity.com:2181 --replication-factor 1 --partitions 1 --topic pathirippillykafkademo
+
+To validate the zookeeper has created or not :
+kafka-topics.sh --list --zookeeper nn01.itversity.com:2181,nn02.itversity.com:2181,rm01.itversity.com:2181 --topic pathirippillykafkademo
+
+Produce messages:
+kafka-console-producer.sh --broker-list nn01.itversity.com:6667,nn02.itversity.com:6667,rm01.itversity.com:6667 --topic pathirippillykafkademo
+
+consuming the message(simulation of a consumer API):
+
+kafka-console-consumer.sh --zookeeper nn01.itversity.com:2181,nn02.itversity.com:2181,rm01.itversity.com:2181 --topic pathirippillykafkademo --from-beginning
+
+
+Anatomy of Topic:
+1. overview
+Topic is nothing but a file which captures stream of messages
+Publishers publish the message to the topic
+Consumers subscribe to the Topic
+Topics can be partitioned for scalability
+Each topic partition can be cloned for reliability
+offset-position of last message consumer have read from each partition of the topic
+consumer group can be created to facilitate multiple consumers read from same topic in co-ordinated fashion
+
+2.In a multi node cluster , if one of the zookeeper brokers  goes down,still if the topic should recieve the messagesn then we need to  give --replication-factor value
+greater than 1
+
+3.if we give --partitions value greater than 1, it will create multiple topic partitions in multiple servers in below format:
+topicname-number
+topicname is the name which we have given for the topic and number is the partition number (i.e, if we say 3 as --partitions , 0,1,2 are numbers)
+
+And producer messages will be equally distributed to these three partitions for scalability
+
+
+Flume and kafka what to use and when:
+
+Since kafka topics can be partitioned and replicated , on scalability and reliability it beats flume
+
+Kafka can be integrated to new applications so that applications will publish the logs to kafka topics instead of webservers
+
+But for existing mission critical applications , to integrate kafka , refactoring of the code is required.So in that scenario
+we can make the flume to read the logs from the webservers and publish it to kafka 
+
+SPARK STREAMING
+****************
+1. spark streaming is done using streamingcontext
+2. streamingcontext is different from sparkContext.
+sparkContext will proccess the data once and get killed automatically while streamingcontext
+will proccess the data continuesly every timeinterval for that we have defined and await for the confirmation for getting killed
+3.streamingcontext can be imported and instantiated as follows
+
+from pyspark.streaming import streamingcontext
+ssc = streamingcontext(sc,30) #where sc is the sparkContext object and 30 is the seconds for which streamingcontext need to be called
+
+Create a webservice using netcat and connecting to it :
+
+nc -lk localhost 9999 # here we are creating a webservice on localhost and port 9999
+
+#Here , below we are connecting to the above webservice on local host
+nc loaclhost 9999
+OR
+telnet loaclhost 99999
+
+Streaming analytics:Word Count Program 
+********************************************
+
+nc -lk  gw03.itversity.com 19999 #opening a netcat server on port nuber 19999
+
+#Word count program 
+
+from pyspark import SparkContext,SparkConf 
+from pyspark.streaming import StreamingContext
+conf =  SparkConf().setAppName("streaming word count").setMaster("yarn-client") #Defining configuration for the SparkContext Session
+sc = SparkContext(conf=conf) # Creating SparkContext object 
+ssc = StreamingContext(sc,15) # creating Streaming context object with in SparkContext session which will run for every 15 seconds 
+lines =  ssc.socketTextStream("gw03.itversity.com",19999) # datatype of lines is dstream 
+words=lines.flatMap(lambda line:line.split(" "))
+wordTuples=words.map(lambda word:(word,1))
+wordCount=wordTuples.reduceByKey(lambda x,y : x+y)
+wordCount.pprint()
+ssc.start()
+ssc.awaitTermination()
+
+Dstream:
+
+Discretized Stream or DStream is the basic abstraction provided by Spark Streaming. It represents a continuous stream of data, 
+either the input data stream received from source, or the processed data stream generated by transforming the input stream. 
+Internally, a DStream is represented by a continuous series of RDDs, which is Spark’s abstraction of an immutable, distributed dataset
+
+
+
+

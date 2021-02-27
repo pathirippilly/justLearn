@@ -1,0 +1,941 @@
+GIT and GIT HUB
+****************
+
+Git is a version-control system for tracking changes in computer files and coordinating work on those files among multiple people.
+It is primarily used for source-code management in software development, but it can be used to keep track of changes in any set of files
+
+The Repository:
+****************
+1.This is the collection of files managed by git. This also maintains the history of the versions.
+2.There is a corresponding working directory created in our local system from which we will be  adding/merging/commiting the changes on the files to GIT repository
+3.This working directory can have both files managed by git and which are not managed by git.
+4.The root of this directory will be having a .git folder which contains the actual repository. This will have its own collection of files and folders which will make up the 
+structure of repository
+
+Commits:
+****************
+
+1. Git versions only files not folders
+2. Commits are the current state of files that it managed as snapshots
+3.Commit can contain one or many file changes
+4.If your project requires some folders to exist regardless of files in it , then you can create dummy files in it to preserve the folders on repository
+5.As you make changes commits are saved to the Timeline known as a branch
+6.A Git repository normally have atleast one branch called master.We can created multiple branches so that multiple team members can work together on same code
+
+Git Hub:
+****************
+
+1.Git Hub is the online hosting service for a git repository managed by GitHub inc
+2. Unlimited public repositories can be created
+3.Private respositories needed an upgrade
+4.it also provides issue tracking,web pages ..etc
+
+Setting up User's name and email on git:
+
+git config --global user.name "your name"
+git config --global user.email "email"
+
+Setting up the home directory :
+********************************
+
+for a single user git we can directly edit the profile file (always not a good practice):
+
+Your profile file will be located under (in Windows):
+C:\Program Files\Git\etc
+
+if we want to change the home directory to our desired directory add below lines in profile file:
+if your desired windows directory is A:\mygit then in profile fie , you need to add HOME variable as :
+
+HOME="/a/mygit"
+
+save and exit
+
+Note: C:\Program Files (x86)\Git\etc\profile is shared by all users, so if the machine is used by more users, it's a good idea to set the $HOME dynamically:
+
+HOME=/c/Users/$USERNAME
+
+
+Setting up notepad++ as  default editor:
+************************************************
+
+While installation itself it will ask for the default editor , we may choose it as what it is dispalyed(mostly vim or nano).Here I will show you how to set up
+Notepad++ as as editor which can be opened from git Bash:
+
+
+Install notepad++ from its official website
+Set the PATH variable as : A:\Software\npp.7.5.7.bin.x64
+Create a ~/.bash_profile file in git HOME directory and add the below lines:
+alias npp= 'notepad++ -multiInst -nosession'
+
+Save and exit
+restart Git Bash
+
+Now by executing 'npp' command , you can open the notepad++
+
+(in older versions of git(<2.0) , its .bashrc file where you need to add this line)
+
+Now for making npp as default editor :
+
+ git config --global core.editor "notepad++ -multiInst -nosession"
+ 
+ Now test the default editor opening the .gitconfig file in home directory using command:
+ 
+ git config --global -e
+ 
+ It will open in notepad++
+ 
+ 
+ Setting p4merge as default graphical compare tool for git:
+ ****************************************************************
+ 
+ Download the P4V cient (Helix visual client) from Download page of perforce.com
+ 
+ After during install , on the installation Window, uncheck all other options except p4merge and proceed
+ 
+ After completing the installation, set the path variable for p4merge as :
+ C:\Program Files\Perforce
+ 
+ After setting the Path variable,restart the Bash and configure the default graphical comparing tool as below:
+ git config --global diff.tool p4merge
+
+We can set the path variable in git as follows for difftool:
+
+ git config --global difftool.p4merge.path "C:\Program Files\Perforce\p4merge.exe"
+ 
+Disable the difftool prompts by :
+ 
+ git config --global difftool.prompt false
+ 
+ Now configure the p4merge as graphical merge tool:
+ 
+ git config --global merge.tool p4merge
+ 
+ Set the path variable for merge tool
+ 
+ git config --global mergetool.p4merge.path "C:\Program Files\Perforce\p4merge.exe"
+ 
+ Disable the merge tool prompts by :
+ git config --global mergetool.prompt false
+ 
+ 
+ Initializing your first project repository:
+ ************************************************
+ 
+ Make a directory of name 'projects' in your home directory:
+ mkdir projects
+ 
+ Navigate to this directory and enter below commad:
+ 
+git init demo
+ 
+ Here we are just creating and initializing a project repository.
+ If you navigate to it , you can see  your command line is showing the folder as master.
+ This indicates that its a git repository master branch.
+ .git folder will be created inside by default.
+ 
+ 3 Local states of git:
+ ********************************
+ 
+There a 3 local states related to files being managed by git:
+
+1. Working local directory:
+This can  have files with uncommitted chnages and is local to the system.But Git is aware about this uncommited changes
+2. Repository(commit history):
+This will have all the changes up to last commit. It keeps all versions till last commit
+3.Staging area:
+Staging area is the intermediate region to which files will be moved from modifies working directory before commiting changes to the repository
+
+First Commit:
+****************
+
+Any time , you check the current status of the git repository by:
+
+git status
+
+Now create a README.md file as your first file with some text in it , save and exit.
+Check git status again:
+
+Now we  will be able to see README.md as an untracked file.
+
+Now to track it while commiting use following command:
+
+git add README.md
+
+Now README.md will move to the staging area of git
+
+Now if we check the git status, we will be able to see this file as a part of uncommited changes
+
+Now do a  commit:
+
+git commit -m "first file in demo repo"
+
+Now if I do a git status, I will get a message saying "Nothing to commit"
+
+Thus we have done our fist commit:
+
+Rgarding .git
+********************
+
+.git is the actual git repostory which will be inside our working directory.If we force fully remove the .git and its sub directories:
+
+rm -rf .git/
+
+This will make our project directory no longer a git repository and we won't be able to execute any kind of out git commands:
+
+
+Adding Git source control to an existing folder:
+************************************************
+
+Suppose folder project/demo is already being used as a project folder with out git version control. Even in that case also
+using git init , we can convert the folder into a git repository 
+
+if you want the current directory to be a git directory, you can simply enter below command:
+
+git init .
+
+Commiting multiple file changes:
+*********************************
+
+To add multiple changes in to staging area , I can use 
+
+git add .
+
+And to commit I can use :
+
+git commit
+
+this will open Commit edit message file in our default editor (here its npp)
+And then we can add our message to the file,save and exit
+
+Checking the git log and history:
+****************************************
+
+To check the commit history in git repository, we can use:
+git log :
+This command will output the commit history with 
+
+commit ID
+Author of the file
+email id
+Date time of commit
+And Commit message
+
+git show:
+
+This will give you last commit details and all the changes in the last commit using diff --git comparator
+
+Knowing the files being tracked and not tracked:
+
+git ls-files :
+
+this will give you the list of  files being tracked
+
+Also if we do a git status , those files which are coming under "changes not staged for commit" are the files being tracked by git.
+Those files which are coming under the message saying "untracked files" are the untracked files by git.
+
+Express commit with message:
+********************************
+
+for modified files under working directory, we can use :
+
+git commit -am "commit message"
+
+This will add the changes to staging area and commit with message
+
+Note: If there is a new file which is untracked by git, that won't be considered in express commit
+
+Rverting back the changes
+***************************
+
+Suppose we have made some changes in README.md file and added that to staging area using:
+
+git add README.md or git add .
+
+But due to some reason we need un-stage those changes. So in that case we can do:
+
+git reset HEAD README.md
+
+Eventhough it is un-staged , we need to get back out README.md in working directory
+to the last commited version, so for doing that, we can do:
+git checkout -- README.md 
+
+getting help on a git command
+********************************
+To get help on a git command use:
+
+git help <command>
+
+git log options
+****************
+
+git log have lots of options , which we can get using "git help log":
+
+--online :
+
+This will give you a fomatted simplified commit entry in one line
+
+--graph:
+
+Draw a text-based graphical representation of the commit history on the left hand side of the output. This may cause extra lines to be printed in between commits, 
+in order for the graph history to be drawn properly
+
+
+--decorate[=short|full|auto|no] :
+
+Print out the ref names of any commits that are shown. If short is specified, the ref name 
+prefixes refs/heads/, refs/tags/ and refs/remotes/ will not be printed. If full is specified, 
+the full ref name (including prefix) will be printed. If auto is specified, then if the output is going to a terminal, 
+the ref names are shown as if short were given, otherwise no ref names are shown. The default option is short
+
+--all :
+This will provide the history for all the branches in the repository
+
+git log --oneline --graph --decorate --all
+
+Creating alias for easy usage
+********************************
+
+Now we can create the above long git log command with options to a user defined command:
+
+git config --global alias.hist "log --oneline --graph --decorate --all"
+
+Once it is done, we can verify the config file entry by :
+
+got config --global --list 
+
+
+Test the command by :
+
+git hist
+
+Now if you want the git histrory only for a particular file 
+
+git hist -- <file_name>
+
+Managing Renaming and deletion using git
+****************************************
+
+Suppose we have created a new file test.txt and we have added it to staging:
+git add test.txt
+
+Now to rename it now before commiting (need to rename in both local working directory as well as in staging):
+
+git mv test.txt demo.txt
+
+Now locally its renamed and in addition to that it has been staged for renaming.So just need to commit the changes:
+
+git commit -m "message"
+
+Now if I want to   delete one file , say demo.txt, permanently. Then :
+
+git rm demo.txt 
+
+Commit the changes:
+
+git commit -m "message"
+
+
+Dealing with local deletion and renaming the file
+*************************************************
+lets create a new file:
+
+touch test.txt
+
+rename the LICENCE.md to LICENCE.txt loally:
+
+mv LICENCE.md LICENCE.txt
+
+Now just check how git sees these changes :
+
+git status
+
+output will be:
+
+
+
+On branch master
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        deleted:    LICENCE.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        LICENCE.txt
+        test.txt
+
+So git will see its as LICENCE.md got deleted and 
+LICENCE.txt,test.txt files got newly created 
+
+so to include these changes any of the  two new git add options we can use :
+
+-u
+--update
+Update the index just where it already has an entry matching <pathspec>. This removes as well as modifies index entries to match the working tree, but adds no new files.
+If no <pathspec> is given when -u option is used, all tracked files in the entire working tree are updated (old versions of Git used to limit the update 
+to the current directory and its subdirectories).
+
+
+-A
+--all
+--no-ignore-removal
+Update the index not only where the working tree has a file matching <pathspec> but also where the index already has an entry. This adds, modifies, and removes index entries 
+to match the working tree.If no <pathspec> is given when -A option is used, all files in the entire working tree are updated (old versions of Git used to limit the update 
+to the current directory and its subdirectories).
+
+As a quick way here we can use :
+
+git add -A
+
+this will include both renamed and new files in the current working tree to staging
+
+now simply do a commit:
+
+git commit -m "message"
+
+
+Ignoring/Excluding files being tracked by git
+*********************************************
+
+We can ignore the files being tracked by git by adding the file names,directory names or patterns to below file:
+
+.gitignore
+
+
+Lets say I need to ignore all those files which are being created with .log extension as well as which are created  log folder in my working directory.
+So for that , first create a .gitignore file in your working directory and add below lines:
+*.logs 
+logs/
+
+save and exit
+
+*.logs is the pattern to exclude all files with .log extension and logs/ is the directory to exclude from git tracking
+
+now add the .gitignore file and commit the changes:
+
+git add .gitignore
+
+git commit -m "commiting new file : .gitignore"
+
+Now all those .log files and all those files under logs/ directory will be excluded from git tracking
+
+
+Comparing differences
+****************************
+
+git diff <commit_id of any commit> HEAD:
+
+this is the comparison using between last commit which is mentioned by HEAD and a specific commit point which is mentioned by commit_id
+We can fetch the commit id details through 'git log --oneline' , here we can get it though our alias git hist.
+
+Example:
+
+git hist:
+
+* 60cb354 (HEAD -> master) included logs directory from .gitignore file
+* 1eedf6b excluded iogs directory from .gitignore file
+* 07fa091 adding .gitignore
+* 3deb6c7 deleting test.txt
+* e82daa2 committing both new file and renamed file
+* 3259c30 committing the deleted file
+* 25c46fe committing the renamed file
+* 2b0800e Testing express commit
+* 0d0d1f8 This is a test commit for multiple changes at a time
+* b354b33 first file in demo repo
+
+git diff 1eedf6b HEAD
+
+same can be done by configured difftool p4merge:
+
+git difftool 1eedf6b HEAD
+
+
+But problem here is this includes all file changes between the commit point and head . To be more specific , we can mention our file name 
+
+git diff 1eedf6b HEAD -- <file_name>
+
+git difftool 1eedf6b HEAD --  <file_name>
+
+Now say if we have made some changed to README.md locally.Now before adding it into staging area
+
+if we do:
+
+git diff
+
+or
+
+git difftool 
+
+we will get the difference between last commited point (HEAD) and current uncommited changes'
+
+git difftool will give more clear differences since it will open in p4merge
+
+SPECIAL NOTE:
+
+git diff will show the difference between your workspace and the index. (the index is where the staged files live)
+
+This may not seem obvious because we usually use git diff to see the changes in the workspace vs what is checked in. 
+However, technically git diff shows workspace vs index, and if you haven't added changes to the index, then the index matches what you checked out.
+
+to see workspace vs repo:  git diff HEAD
+to see index vs repos: git diff --cached (can also use --staged)
+to see workspace vs index:  git diff
+
+
+BRANCHING AND MERGING
+******************************
+
+
+Branches are timeline of commits
+Branch names are labels
+By removing it , removes only the labels
+
+When you will create a repository , by default Master Branch is created.
+
+When you create a New branch , you can commit your changes on branch level and then you can merge the changes to the master branch
+
+Types of merges:
+
+1. Fast forward merge:
+
+when no additional work has been detected on the parent branch (in our case master), git will simply apply all commits from other branch
+directly on to the parent branch as if we never branched off to begin with
+
+of Course, we can disable the fast forward merges if they are un desired for some reason.
+
+2. Automatic Merge :
+
+This happens when ,git detects  non-conflicting changes in the parent branch.
+Git is able to automatically resolve any conflicts
+
+In doing so, the old branch's timeline is preserved , and a new merge commit is created to 
+show the merging of two branches.
+
+3. Manual Merge:
+This happens when git is unable to resolve any conflicts automatically.
+Git enters a special conflicting merge state, which means that al merge conflicts must be resolved prior to 
+moving forward with a commit
+Once all conflicts are resolved , those changes are saved as a merge commit
+
+
+HEAD points the last commit of the current Branch
+
+
+Creating a simple branch
+****************************
+FAST FORWARD MERGE:
+
+
+say we have an uncommitted change to one of the files. For example README.md
+
+Now if we create a branch as :
+
+git checkout -b updates
+
+This will create and switch the branch.
+
+(where 'updates' is the branch name)
+
+To know which branch you are currently in and what all branches are there, use the below command:
+
+git branch
+
+This will list all branches and highlight the current branch
+
+
+make some more changes to the same file,save and exit.
+
+Now add those changes from brach to staging area
+
+git add .
+
+and then commit the changes on branch
+
+git commit -m "messgage"
+
+Now if we look for git status , with respect to branch 'updates' , it will  be all clear.
+
+But if we do our git hist:
+
+* 49781fc (HEAD -> updates) adding updates from branch
+* 60cb354 (master) included logs directory from .gitignore file
+* 1eedf6b excluded iogs directory from .gitignore file
+* 07fa091 adding .gitignore
+* 3deb6c7 deleting test.txt
+* e82daa2 committing both new file and renamed file
+* 3259c30 committing the deleted file
+* 25c46fe committing the renamed file
+* 2b0800e Testing express commit
+* 0d0d1f8 This is a test commit for multiple changes at a time
+* b354b33 first file in demo repo
+
+we can see we have done our commit only on 'updates' branch and not on the master
+
+we can use diff command to compare the two branches
+
+git diff updates master
+
+Or we can use p4merge :
+
+git difftool updates master --  README.md
+
+Now Switch back to Master branch using :
+
+git checkout master
+
+Now if we sat git hist:
+
+* 49781fc (updates) adding updates from branch
+* 60cb354 (HEAD -> master) included logs directory from .gitignore file
+* 1eedf6b excluded iogs directory from .gitignore file
+* 07fa091 adding .gitignore
+* 3deb6c7 deleting test.txt
+* e82daa2 committing both new file and renamed file
+* 3259c30 committing the deleted file
+* 25c46fe committing the renamed file
+* 2b0800e Testing express commit
+* 0d0d1f8 This is a test commit for multiple changes at a time
+* b354b33 first file in demo repo
+
+HEAD is now associated to master. Thats why HEAD is the last commit point of current branch.
+
+We can see commits seperate on updates which we need to merge.
+
+For merging any branch from the current branch:
+
+git merge <branch_name>
+
+here it is :
+
+git merge updates
+
+Now if look for the log details (git hist):
+
+
+* 49781fc (HEAD -> master, updates) adding updates from branch
+* 60cb354 included logs directory from .gitignore file
+* 1eedf6b excluded iogs directory from .gitignore file
+* 07fa091 adding .gitignore
+* 3deb6c7 deleting test.txt
+* e82daa2 committing both new file and renamed file
+* 3259c30 committing the deleted file
+* 25c46fe committing the renamed file
+* 2b0800e Testing express commit
+* 0d0d1f8 This is a test commit for multiple changes at a time
+* b354b33 first file in demo repo
+
+The same commit_id which was owned by commit from branch 'updates' is now merged with master.
+Thats commits from updates are directly applied on master branch.
+
+This is called fast forward merge
+
+Now if we delete the branch 'updates' also, this not going affect the time line, since chnages are already preserved on parent branch
+
+For deleting the branch :
+
+git branch -d updates
+
+Resolving conflicts
+*******************
+
+scenario 1:
+
+
+
+Say I have checkout in to a new branch called "trouble"
+
+git checkout -b trouble
+
+Now I am making some changes to README.md and commiting the changes there
+
+Now I am switching back to master :
+
+git checkout master
+
+Here I am making some other changes to the file
+
+Now If I tried to merge the the trouble branch from  master branch without commiting:
+
+
+git merge trouble
+
+I will get the below error :
+
+error: Your local changes to the following files would be overwritten by merge:
+        README.md
+Please commit your changes or stash them before you merge.
+Aborting
+Updating 49781fc..7e72b5f
+
+
+So now If I commit the changes on master:
+
+git commit -am "commiting README.md"
+
+And now retry the merge:
+
+git merge trouble
+
+this will put you into a merging state saying :
+
+Auto-merging README.md
+CONFLICT (content): Merge conflict in README.md
+Automatic merge failed; fix conflicts and then commit the result.
+
+Now I will be in a merging  state '(master|MERGING)'
+
+Now we need to fix the conflicts.For that we need to launch our merge tool (p4merge):
+
+git mergetool
+
+Now p4merge will open with three states of file:
+
+1.The last  committed file before making changes on branch or master
+2.branch committed file
+3. master committed file
+
+we can now choose which all changes to retain and which all to exclude.
+once you select it, save the changes on merge p4merge and exit
+
+Now you need to commit all changes by saying :
+
+git commit -m "saving changes"
+
+Note: There will be .orig files created for all conflicted files. We can add that to .gitignore as *.orig to exclude it from 
+tracking by git
+
+TAGS
+*******
+
+tags are the labels representing commit points.
+
+There are two types of tags 
+
+1. Light Weighted Tags
+2. Annotated Tags
+
+Light Weighted tags :
+
+creation:
+
+git tag <tag_name>
+
+listing tags :
+
+git tag --list
+
+deletion:
+
+git tag -d <tag_name>
+
+Annotated Tags:
+
+creation:
+
+git tag -a <tag_name> -m "message"
+
+if we do : git show <tag_name>
+
+This will list 
+
+Author of the tag
+data and time
+commit message 
+and other commit informations
+
+STASHING
+**********
+
+Suppose you are implementing a new feature for your product. Your code is in progress and suddenly a customer escalation comes. Because of this, 
+you have to keep aside your new feature work for a few hours. You cannot commit your partial code and also cannot throw away your changes.
+ So you need some temporary space, where you can store your partial changes and later on commit it.
+
+In Git, the stash operation takes your modified tracked files, stages changes, and saves them on a stack of unfinished changes that you can reapply at any time.
+
+Creation of stash:
+
+git stash
+
+listing stash :
+
+git stash list
+
+getting back the stashed changes:
+
+git stash pop 
+
+once you get back the stashed changes , git status will show the changes and you can commit the same
+
+Time Travel with reset and reflog:
+*********************************
+
+If you want to roll back your version to a certaing commit point , you can use 'git reset'
+There are three types of reset:
+
+1. Soft 
+2. Mixed
+3. Hard
+
+SOFT RESET:
+
+git reset <commit_id> --soft
+
+It will just re point HEAD marker to the mentioned commit point.
+So even if we roll back to an old commit point, it will preserve 
+the git staging area and workind directory
+
+example:
+making some changes to README.md
+now doing a git status will show the message saying changes need to be staged for commit
+Now do a git hist:
+
+git hist
+
+output:
+
+* 3ea2c84 (HEAD -> master) changes for stash test
+*   eac6ac7 (tag: v1.0) commiting changes
+|\
+| * eb72ba1 adding another conflict for commit
+* | b57c89f commiting local changes
+|/
+*   c041e5f merging master to branch
+|\
+| *   ed0e7ba Merge branch 'truoble' Adding chnages to .gitignore for excluding .orig files and commiting changes to README.md
+| |\
+| * | 45f68a9 commiting conflicts from master
+* | | 290c977 commiting branch conflict
+| |/
+|/|
+* | 7e72b5f adding nppBackup to gitignore amd also commiting README.md new changes
+|/
+* 49781fc adding updates from branch
+* 60cb354 included logs directory from .gitignore file
+* 1eedf6b excluded iogs directory from .gitignore file
+* 07fa091 adding .gitignore
+* 3deb6c7 deleting test.txt
+* e82daa2 committing both new file and renamed file
+* 3259c30 committing the deleted file
+* 25c46fe committing the renamed file
+* 2b0800e Testing express commit
+* 0d0d1f8 This is a test commit for multiple changes at a time
+* b354b33 first file in demo repo
+
+say now we are rolling back to commit point : 49781fc
+
+git reset 49781fc --soft
+
+now git hist will give you :
+
+*   eac6ac7 (tag: v1.0) commiting changes
+|\
+| * eb72ba1 adding another conflict for commit
+* | b57c89f commiting local changes
+|/
+*   c041e5f merging master to branch
+|\
+| *   ed0e7ba Merge branch 'truoble' Adding chnages to .gitignore for excluding .orig files and commiting changes to README.md
+| |\
+| * | 45f68a9 commiting conflicts from master
+* | | 290c977 commiting branch conflict
+| |/
+|/|
+* | 7e72b5f adding nppBackup to gitignore amd also commiting README.md new changes
+|/
+* 49781fc (HEAD -> master) adding updates from branch
+* 60cb354 included logs directory from .gitignore file
+* 1eedf6b excluded iogs directory from .gitignore file
+* 07fa091 adding .gitignore
+* 3deb6c7 deleting test.txt
+* e82daa2 committing both new file and renamed file
+* 3259c30 committing the deleted file
+* 25c46fe committing the renamed file
+* 2b0800e Testing express commit
+* 0d0d1f8 This is a test commit for multiple changes at a time
+* b354b33 first file in demo repo
+
+here we can see that HEAD is pointing to 49781fc.
+
+Not only that it will preserve all the changes of this commit point in staging area as well as all the changes 
+that we have rolled back in "Changes not staged for commit". You can see this by git status as below:
+
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   .gitignore
+        modified:   README.md
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   README.md
+		
+from here we can even again go back to original commit point from where we came
+
+https://stackoverflow.com/questions/3528245/whats-the-difference-between-git-reset-mixed-soft-and-hard
+
+MIXED RESET:
+
+git reset <commit_id> --mixed
+
+Here it will modify the index. It means , it will unstage the changes of that commit point
+
+
+HARD RESET:
+
+git reset <commit_id> --hard
+
+This will modify the working directory
+
+
+REMOTE REPOSITORY: GIT HUB
+**************************
+1. create a git hub account and set up your profile
+2. Create a repository to begin say 'demo'
+3. Now you will be able to see a section for "PUSH an existing repository from commad line".
+Youn can see two commands similar as of  below :
+
+git remote add origin https://github.com/pathirippilly/demo.git
+git push -u origin master
+
+4.To Begin with , we need to link  the local repository with the one in Git-Hub.Open Git bash 
+> Navigate to your local repository > Type below command to link your local repo to git repo
+
+git remote add origin https://github.com/pathirippilly/demo.git
+
+here 'origin'  is the reference name to remote repo URL. You can give any other name
+
+Now if you want to see what all remote repositories are linked to your local respository:
+
+git remote -v
+
+5.Push your changes of local respository to remote as :
+git push -u origin master --tags
+
+origin : this is the repository to which you are pushing
+master : this is the local repository branch from which you are pushing
+
+--tags : this option will include all your tags while pushing
+
+-u : this will set up a tracking branch relationship between master branch in the remote repository and master branch in the local repository
+This is required only for the first time push
+
+
+
+ 
+
+
+
+
+ 
+ 
+ 
+ 
+
+
+
+

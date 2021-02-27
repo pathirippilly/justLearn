@@ -1,0 +1,1133 @@
+SPARK2 WITH PYTHON3
+************************
+
+RDD:
+
+
+Basic Transformations and Actions - 01 - map, flatMap, reduce and more
+***********************************************************************
+
+1.Creating an RDD from a collection (pyspark shell where sparkContext is imported as sc)
+
+l=range(1,100)
+rdd=sc.parallelize(l)
+
+2. Taking count from an rdd
+
+rdd.count()
+
+3. Applying a filter on rdd
+
+rdd.filter(function)
+
+example:
+l=range(1,100)
+lrdd=sc.parallelize(l)
+lrdd.filter(lambda x : x%2==0) # this will return rdd which is a factor of 2
+
+4.Applying a map on rdd
+
+l=range(1,10)
+lrdd=sc.parallelize(l)
+lrdd.map(lambda x : (x,x**2)) # this will return an rdd of tuples with 1 to 9 numbers and their square as pair
+
+5.Applying flatMap on rdd 
+ l = [['a','b','c'],['d','e','f']]
+ lrdd=sc.parallelize(l)
+ lrdd.flatMap(lambda x : x) # this will unpack the inner lists and output will be a single list.
+ 
+6.map() v/s flatMap()
+
+A map is a transformation operation in Apache Spark. It applies to each element of RDD and it returns the result as new RDD. 
+In the Map, operation developer can define his own custom business logic. The same logic will be applied to all the elements of RDD.
+Spark Map function takes one element as input process it according to custom code (specified by the developer) and returns one element at a time. 
+Map transforms an RDD of length N into another RDD of length N. The input and output RDDs will typically have the same number of records.Learn more on 
+
+A flatMap is a transformation operation. It applies to each element of RDD and it returns the result as new RDD. It is similar to Map, 
+but FlatMap allows returning 0, 1 or more elements from map function. 
+In the FlatMap operation, a developer can define his own custom business logic. The same logic will be applied to all the elements of the RDD.
+A FlatMap function takes one element as input process it according to custom code (specified by the developer) and returns 0 or more element at a time. 
+flatMap() transforms an RDD of length N into another RDD of length M.
+
+7.reduce()
+
+This is an action. It converts rdd to a single value by performing some aggregation
+
+l=range(1,10)
+lrdd=sc.parallelize(l)
+lrdd.reduce(lambda x,y : x+y) # this will give the sum of all numbers of rdd
+
+8.Converting a text file on HDFS into an RDD
+example:
+
+rdd=sc.textFile("/user/pathirippilly/sample_data_mr/wordCount.txt",5) # here first argument is manadatory which is nothing but path of the file
+and second argument is optional  which is number of partitions to be created
+
+
+8.reduceByKey()
+
+This is an action. It takes key value pairs as input and apply aggregation over a key
+
+example:
+Below is the word count program code where 
+
+a.First file is converted in to rdd with specified partitions using sc.textFile()
+b.Second words of each lines are splitted using flatMap()
+c.Key value pairs of each word and '1' are formed using map()
+d. And count of each words in the file are calculated using reduceByKey()
+
+rdd=sc.textFile("/user/pathirippilly/sample_data_mr/wordCount.txt",5) #a
+mappedrdd=rdd.flatMap(lambda x :x.split(" ")).map(lambda x :(x,1)) #b and c
+shuffledRDD=mappedrdd.reduceByKey(lambda x,y : x+y) #d
+
+9.groupByKey:
+
+When called on a dataset of (K, V) pairs, returns a dataset of (K, Iterable<V>) pairs. 
+Note: If you are grouping in order to perform an aggregation (such as a sum or average)
+over each key, using reduceByKey or aggregateByKey will yield much better performance. 
+Note: By default, the level of parallelism in the output depends on the number 
+of partitions of the parent RDD. You can pass an optional numPartitions argument 
+to set a different number of tasks.
+
+example:
+
+problem:
+Find total  revenue per order number from the orderitems data file
+
+orderitem file has following columns  seperated by comma as delimitter.
+
+item_no,order_item_order_id,product_id,qty_sold,order_item_subtotatl,price_per_qty
+
+Code:
+orderitems=sc.textFile("/public/retail_db/order_items") # OrderItems file has been read here 
+order_rev_pair=orderitems.map(lambda order : (int(order.split(",")[1]),float(order.split(",")[4]))) # Creating pairs of order_id and order_item_subtotal
+revenueperorder=order_rev_pair.groupByKey().map(lambda x : (x[0],round(sum(x[1]),1))) # grouping and performing sum of order_item_subtotal per order_id
+
+alternative:
+The above same problem can be solved by reduceByKey in a more efficient way
+
+code:
+
+order_rev_pair.reduceByKey(lambda x,y : round(x+y,2))
+
+10.SortByKey
+
+It sorts based on Key of KeyValue Pair
+
+From above example, if we take revenueperorder and if we apply
+
+revenueperorder.sortByKey() # this will sort the dataset in ascending order of order number
+revenueperorder.sortByKey(False) # this will sort dataset in descending order of order number
+revenueperorder.map(lambda x: (x[1],x)).sortByKey(False).map(lambda x :x[1]).take(10) # this will give you orders with  top ten revenue
+
+11.Dealing with partitions 
+
+if you are reading from a file to rdd in HDFS , by default it will create number of partitions equals number of blocks it has to read.
+Say Default block size of HDFS (2.x)is 128mb, then if a file less than this size  will be read to rdd by spark as 1 partition since only one block is used.
+And if it is 256mb file, then 2 partitions and so on.
+
+To know the current number of partitions of an rdd,
+
+orderitems=sc.textFile("/public/retail_db/order_items")
+orderitems.getNumPartitions()
+
+To know , number of records in each partition, you can use
+
+orderitems.glom().map(lambda x : len(x))
+
+Now If I save it directly in to HDFS:
+orderitems.saveAsTextFile("/user/pathirippilly/spark_jobs/output_data_set/orderitesmpartitioned")
+
+we can see the how many number of partitions are there, that many number of files will be created.
+
+To alter the default partitions created, we can do it in multiple ways
+
+method 1:
+While reading a file to rdd  using sparkContext, you can pass the second argument as numPartitions as below 
+orderitems=sc.textFile("/public/retail_db/order_items",5) # Here 5 partitions will be created irrespective of the size of the file 
+
+method 2 :
+If you want to decrease the number of partitions , we can use coalesce.
+
+orderitems=sc.textFile("/public/retail_db/order_items")
+orderitems.coalesce(1) # this will reduce the number of partitions to 1
+
+note:
+It avoids a full shuffle. If it's known that the number is decreasing then the executor can safely keep data on the minimum number of partitions,
+only moving the data off the extra nodes, onto the nodes that we kept.
+
+method 3:
+This is using repartition.This is slower and expensive than coalesce(But you can increase or decrease partitions here)
+orderitems=sc.textFile("/public/retail_db/order_items")
+orderitems.repartition(5)# Here we are repartitioning to 5
+
+Note:
+Keep in mind that repartitioning your data is a fairly expensive operation.  
+
+
+12.groupByKey vs reduceByKey vs aggregateByKey:  why reduceByKey and aggregateByKey is preferred in spark2
+
+The main difference is the number of records that are tansferring from stage 0  to 1 during shuffling face:
+
+Bykey operations always results in shuffling , since grouping of records between multiple partitions  are needed
+In such case, result of shuffling is a new stage with a modified number of partitions
+
+
+Lets take the  code for calculating order revenue :
+
+orderitems=sc.textFile("/public/retail_db/order_items") # OrderItems file has been read here 
+order_rev_pair=orderitems.map(lambda order : (int(order.split(",")[1]),float(order.split(",")[4]))) # Creating pairs of order_id and order_item_subtotal
+revenueperorder=order_rev_pair.groupByKey().map(lambda x : (x[0],round(sum(x[1]),1))) # grouping and performing sum of order_item_subtotal per order_id
+
+whats happening in shuffle phase for groupByKey:
+
+Here we are applying  groupByKey and on order_rev_pair rdd, which is nothing but an rdd with key value pairs.
+Key is order id which is an integer.
+
+So when we apply groupByKey on a rdd which needs to have key value pairs, first it needs to be shuffled based on key.
+
+Shuffling  always heppens with hash mod on no.of partitions
+
+HashmodKey:
+
+hash mod Key is nothing but , (hash value of the key) modulo (no.of partitions of the rdd)
+
+in python hash value of any integer is the integer itself,for string its different.
+For finding hash value , we can use
+hash(key) # where key can be string or integer
+
+Any way in our example , key is an integer.so hash(key) is also the same.
+Lets say we have below key value pairs in one partition  and similarly  we have 3 partitions as a whole.
+
+(5,299.95) => applying hash mod no.partitions , 5 mod 3 => 2
+(4,299.95) => applying hash mod no.partitions , 4 mod 3 => 1
+(2,129.99) => applying hash mod no.partitions , 2 mod 3 => 1
+(5,129.99) => applying hash mod no.partitions , 5 mod 3 => 2
+
+we can see result of mod operation is two distinct values 2,1. 
+All values with hash mod value 2 will come under one bucket(partition)
+and all with 1 will come under another bucket. 
+
+Like this, for 3 existing partitions, we have 12 records.
+And possible hash mod values are only three - 0,1,2.(0 can also come if we have 3 as key - 3 mod 3 is zero)
+So possible number of partitions after shuffling are three.
+
+So all values with same hash mode value will come under same bucket.
+They will be grouped and sorted automatically.In above case it will be as below
+
+bucket 1:
+(2,129.99)
+(4,299.95)
+bucket 2:
+(5,299.95)
+5,129.99)
+
+(Bucket 0 also can have value which I am not mentioning here)
+
+Now this is stage 1 where groupByKey is happening .
+
+So all records  with same order_id will be grouped together
+(5,[299.95,129.99])
+(2,129.99)
+(4,299.95)
+
+If you see eventhough its grouped , no.of records transferred from stage 0 to stage 1 is same
+And Now we need an extra map function here to perform aggregation
+
+
+whats happening in shuffle phase for reduceByKey:
+
+If we take the same scenario as above , while performing hash mod operation itself on stage 0,
+reduceByKey will be performed for each partition and bucket 1 and bucket 2 of stage 1 will look like this
+ 
+ bucket 1:
+(2,129.99)
+(4,299.95)
+bucket 2:
+(5,429.94)
+
+like this for every partition in stage 0 itself , intermediate aggregation will be done by reduceByKey
+And in stage 1, final  level of aggregation will be performed by reduceByKey.
+
+So a combiner implemenation is there here due to which records transferred between stages are less.
+
+
+This difference will be much high in case of large data sets so that if we use  reduceByKey , 'shuffle read' size will be 
+less
+
+Now aggregateByKey is as same as reduceByKey but only difference is ,we will be providing the intermediate combiner logic as a function.
+
+If we take the above scenario itself, along with total revenue , if we need to calculate the total number of items per order,
+we need to , we have to perform to aggregations together, so intermediate logic will change
+
+
+order_rev_pair.aggregateByKey((0.0,0),lambda x,y: (x[0]+y,x[1]+1),lambda x,y:x[0]+y[0],(x[1]+y[1]))
+
+Here we first tuple is initialization of desired output, second argument is the combiner logic which will be executed on stage 0.
+And third argument is the final aggregation logic which will be executed on stage1
+
+13.Filter , Joins and sortByKey()
+
+Lets see how filter works:
+
+filter() is similar to where clause of an sql. Say we need to filter orders with 'CLOSED' and 'COMPLETE' status 
+from a data set called orders with fileds order_id,order_tmst,order_customer_id,order_status. The code is as given below:
+
+orders=sc.textFile("/public/retail_db/orders")
+orders.filter(lambda x : x.split(",")[3] in ['CLOSED','COMPLETE']) # this will filter out All CLOSED and COMPLETE orders
+
+Lets see how join works:
+
+As in sql we have join , leftOuterJoin, rightOuterJoin, and fullOuterJoin.
+
+So to demonstrate that , we can take below data sets 
+
+orders with columns order_id,order_tmst,order_customer_id,order_status
+orderitems with columns order_item,order_item_order_id,product_id,order_qty,order_item_subtotal,price_per_qty
+
+#reading files in to rdd:
+
+orders=sc.textFile("/public/retail_db/orders")
+orderitems=sc.textFile("/public/retail_db/order_items")
+
+#Checking the count of orders in each data set:
+orders.count() # this will give  68883
+orderitems.map(lambda x : x.split(",")[1]).distinct().count() # this will give 57431(we are first filtering out orders alone and applying distinct() over it because, 
+#we have multiple items for a single order in this table)
+# above difference shows that we have 68883-57431=11452 orders with no order items 
+
+#Now lets take order_id and status alone from 'orders'.Also map order_item_order_id as key and each record as value (tuple) from 'orderitems' dataset
+closed_complete_orders=orders.filter(lambda x : x.split(",")[3] in ['CLOSED','COMPLETE']).map(lambda x : (x.split(",")[0], x.split(",")[3])) #closed or complete orders from 'orders'
+orderitems_mapped=orderitems.map(lambda x : (x.split(",")[1],x)) # Each record will be a tuple with order_item_order_id as key and entire line of record as value
+
+closed_complete_orders.join(orderitems_mapped) # This will give closed or complete orders with orderitems
+closed_complete_orders.leftOuterJoin(orderitems_mapped).filter(lambda x : x[1][1]==None).count() # this will give closed or complete orders with no orderitems in orderitem data set
+#Same can be achieved with rightOuterJoin by just swapping the left and right data sets as below
+orderitems_mapped.rightOuterJoin(closed_complete_orders).filter(lambda x : x[1][0]==None)
+#Now if you do a fullOuterJoin on both , you will get all matched records from both table as well as un matched records with None as value
+
+
+# Now lets see one of its application with sortByKey()
+
+
+scenario 1:
+we need to find total revenue per order_tmst joining data sets orders and order_items
+
+lets take the two data sets 
+orders with columns order_id,order_tmst,order_customer_id,order_status
+orderitems with columns order_item,order_item_order_id,product_id,order_qty,order_item_subtotal,price_per_qty
+
+
+
+#reading files in to rdd:
+
+orders=sc.textFile("/public/retail_db/orders")
+orderitems=sc.textFile("/public/retail_db/order_items")
+
+#filter closed and complete orders alone from orders and extract only order_id and order_tmst from 'orders':
+
+orders_closed_complete=orders.filter(lambda x : x.split(",")[3] in ['CLOSED','COMPLETE']).map(lambda x : (int(x.split(",")[0]),x.split(",")[1]))
+
+#extract order_item_order_id,order_item_subtotal from 'orderitems':
+
+orderitems_extract=orderitems.map(lambda x : (int(x.split(",")[1]),float(x.split(",")[4])))
+
+#Join both 'orders_closed_complete' and 'orderitems_extract' on order_id and extract  order_tmst and order_item_subtotal  column values alone
+
+orders_with_subtotal=orders_closed_complete.join(orderitems_extract).map(lambda x : x[1])
+
+#Now apply reduceByKey  to get total revenue per order date:
+
+from operator import add
+order_rev=orders_with_subtotal.reduceByKey(add).map(lambda x:(x[0],round(x[1],2)))
+
+#Now Sort the output based on date in ascending order:
+
+order_rev=order_rev.sortByKey()
+
+#Now Sort the output based on date in descending order:
+
+order_rev=order_rev.sortByKey(False)
+
+
+#Now Saving the output to a file.Here we need to convert tuple into a single string before writing into a file.
+order_rev_string=order_rev.map(lambda x : f"{x[0]},{x[1]}")
+order_rev_string.saveAsTextFile("out_put_path in hdfs") # output path should not exist. Also output splits are depends up on no.of partitions of rdd
+
+14.map() vs mapPartitions():
+
+If you use map() over an rdd , the function called  inside it will run for every record .It means if you have 10M records , function also will be executed 10M times.
+This is expensive especially when you are dealing with scenarios involving database connections and querying data from data base.
+Lets say inside map function, we have a function defined where we are connecting to a database and querying from it. Lets say our RDD is having 10M records.
+Now this function will execute 10M times which means 10M database connections will be created . This  is very expensive.
+In these kind of scenarios , we can use mapPartitions() instead of map().mapPartitions() will run the function called only once for each partitions.
+
+example:
+
+We can do a simple word count job for demonstrating this :
+
+lets consider the below dataset:
+
+/public/randomtextwriter/part-m-00000
+
+This dataset is of 1 GB so that by default it will be read as 	rdd with 9 partitions by spark from HDFS since default block size
+of HDFS is 128mb
+
+wordcounttext = sc.textFile("/public/randomtextwriter/part-m-00000") # rdd with 9 partitions
+
+Normal Wordcount logic using map is as below:
+
+wordcounttext.flatMap(lambda x : x.split(" ")).map(lambda x : (x,1)).reduceByKey(lambda x,y : x+y)
+
+Here rdd 'wordcounttext' is having 26421 records. flapMap will execute 26421 times.
+
+But if we implement mapPartition here , the function defined inside it will execute only once for every partition.
+And each partition will be read as a generator through which we can iterate and get the line of records.
+So dealing with this generator can be done through core-python APIs
+
+The above word count program can be written in two ways as below 
+
+method1:
+ wordcount=wordcounttext.mapPartitions(lambda x : map(lambda o:o.split(" "),x)).flatMap(lambda x : x).map(lambda x : (x,1)).reduceByKey(add)
+ 
+method2:
+here we define a function first which  will consume generator as an argument and iterate through it using itertools.chain.from_iterable().
+itertools.chain.from_iterable()	functions same as flatMap in spark so that for every partition (every generator) picked by mapPartitions()
+,it will convert the records in to independent words and words will be paired with '1'.And the output for each partition by this function will be
+a map object which inturn is a generator. And this will be consumed by the lambda function inside mapPartitions()
+
+
+def getWordTuples(i):
+	import itertools as it
+	wordTuples=map(lambda s : (s,1),it.chain.from_iterable(map(lambda s : s.split(" "),i)))
+	return wordTuples
+	
+wordTuples = lines.mapPartitions(lambda i : getWordTuples(i)) # getWordTuples will execute for every partition
+wordcount=wordTuples.reduceByKey(add)
+
+15.Ranking and groupByKey()
+
+scenario 1:Display Top N products order by price group by category 
+
+
+code:
+
+products=sc.textFile("/public/retail_db/products")
+products_filtered=products.filter(lambda x : x.split(",")[4] != "") #filtering out a bad record
+products_filtered_map=products_filtered.map(lambda x : (int(x.split(",")[1]),x))
+products_filtered_group=products_filtered_map.groupByKey()
+
+def getTopNProducts(products,topN):
+	return sorted(products,key=lambda p : float(p.split(",")[4]),reverse=True)[:topN]
+
+topNProductsByCategory = products_filtered_group.flatMap(lambda p : getTopNProducts(list(p[1]),4))
+
+
+
+scenario 2: Display Top N proced products group by category
+
+method1:
+
+
+def getTopNPricedPrducts(products,topN):
+	pricelist=sorted(set(list(map(lambda p : float(p.split(",")[4]),products))),reverse=True)[:topN]
+	return sorted(list(filter(lambda p : float(p.split(",")[4]) in pricelist,products)),key=lambda k  : float(k.split(",")[4]),reverse=True)
+	
+TopNPricedPrducts = products_filtered_group.flatMap(lambda p : getTopNPricedPrducts(list(p[1]),4))
+
+method2(less performance for large data sets):
+
+def getTopNPricedPrducts2(products,topN):
+	from itertools import takewhile
+	pricelist=sorted(set(list(map(lambda p : float(p.split(",")[4]),products))),reverse=True)[:topN]
+	SortedProducts = sorted(products,key=lambda k : k.split(",")[4],reverse=True)
+	return takewhile(lambda p : float(p.split(",")[4]) in pricelist,SortedProducts)
+	
+
+16.Accumulators, Broadcast Variables, Repartition and Coalesce
+
+Getting Monthly product revenue
+********************************
+
+>>>>scenario:Implemenation of accumulator>>>>
+CODE:
+
+>We have to use orders,orderitems,products data sets to compute revenue for per product for a given month
+>orders have order_id and order_date
+>order_items have order_item_subtotal,order_item_order_id and order_item_product_id
+>products have product_id and product name
+>order and order_items are in HDFS and products are in local file system
+
+For this we will be passing following arguments through application.properties file:
+(application.properties file will look like this)
+
+[prod]
+executionmode = yarn-client
+input_base_dir = /public/retail_db
+output_base_dir = /user/pathirippilly/spark_jobs/output_data_set/OrderRevenuePerProduct
+local_dir = /home/pathirippilly/retail_db
+month = 2013-08
+
+
+input_base_dir # this is the HDFS path where orders and orderitems files are placed
+output_base_dir # this is the HDFS path where output will be saved as file
+local_dir # local path where products file is placed
+month # this  is the month for which we will be calculating the revenue
+exec_env # this is the environment where we will be running the script. We need to pass this as a runtime argument also
+
+import sys
+import configparser as cp
+
+try:
+        from pyspark import SparkContext, SparkConf
+
+        props = cp.RawConfigParser()
+        props.read("/home/pathirippilly/spark2_jobs/src/main/python/application.properties")
+        conf = SparkConf(). \
+                setAppName("RevenuePerProductForMonth"). \
+                setMaster(props.get(sys.argv[1],"executionmode"))
+        sc =  SparkContext(conf = conf)
+        inputpath = props.get(sys.argv[1],"input_base_dir")
+        outputpath= props.get(sys.argv[1],"output_base_dir")
+        month=props.get(sys.argv[1],"month")
+        localdir=props.get(sys.argv[1],"local_dir")
+        path = sc._gateway.jvm.org.apache.hadoop.fs.Path
+        filesystem=sc._gateway.jvm.org.apache.hadoop.fs.FileSystem
+        configuration=sc._gateway.jvm.org.apache.hadoop.conf.Configuration
+
+        fs=filesystem.get(configuration())
+
+        if(fs.exists(path(inputpath)) == False):
+                print("inputpath doesnot exists")
+        else:
+                if(fs.exists(path(outputpath))):
+                        fs.delete(path(outputpath),True)
+
+                orders=inputpath + "/orders"
+                counter=sc.accumulator(0)
+                def OrderTuples(order):
+                        counter.add(1)
+                        return (int(order.split(",")[0]),1)
+                ordersFiltered = sc.textFile(orders). \
+                    filter(lambda order : month in order.split(",")[1]). \
+                    map(lambda order : OrderTuples(order))
+                print(counter)
+                orderitems=inputpath + "/order_items"
+                orderitemsFiltered = sc.textFile(orderitems). \
+                        map(lambda oi : (int(oi.split(",")[1]),(int(oi.split(",")[2]),float(oi.split(",")[4]))))
+                revenueByProductId=orderitemsFiltered.join(ordersFiltered).map(lambda rec : rec[1][0]).reduceByKey(lambda x,y: x+y)
+
+                with open(localdir + "/products/part-00000") as file:
+                        products=file.read().splitlines()
+                productsFiltered = sc.parallelize(products). \
+                        map(lambda p : (int(p.split(",")[0]),p.split(",")[2]))
+                revenueByProductName=revenueByProductId.join(productsFiltered).map(lambda p: str(p[1][1]) + "\t" + str(round(p[1][0],2)))
+                for i in revenueByProductName.take(10):
+                        print(i)
+                revenueByProductName.coalesce(1).saveAsTextFile(outputpath)
+                print(f"COUNTER IS:{counter}")
+
+except ImportError as e:
+        print("Can not import spark modules",e)
+sys.exit(1)
+
+
+EXECUTION:
+
+spark-submit --master yarn --conf spark.ui.port=21888 --num-executors 2 --executor-memory 512M /home/pathirippilly/spark2_jobs/src/main/python/RevenuePerProductForMonth.py prod
+
+
+>>>>scenario:Implemenation of Broadcast Variable>>>>
+CODE:
+
+import sys
+import configparser as cp
+
+try:
+        from pyspark import SparkContext, SparkConf
+
+        props = cp.RawConfigParser()
+        props.read("/home/pathirippilly/spark2_jobs/src/main/python/application.properties")
+        conf = SparkConf(). \
+                setAppName("RevenuePerProductForMonth"). \
+                setMaster(props.get(sys.argv[1],"executionmode"))
+        sc =  SparkContext(conf = conf)
+        inputpath = props.get(sys.argv[1],"input_base_dir")
+        outputpath= props.get(sys.argv[1],"output_base_dir")
+        month=props.get(sys.argv[1],"month")
+        localdir=props.get(sys.argv[1],"local_dir")
+        path = sc._gateway.jvm.org.apache.hadoop.fs.Path
+        filesystem=sc._gateway.jvm.org.apache.hadoop.fs.FileSystem
+        configuration=sc._gateway.jvm.org.apache.hadoop.conf.Configuration
+
+        fs=filesystem.get(configuration())
+
+        if(fs.exists(path(inputpath)) == False):
+                print("inputpath doesnot exists")
+        else:
+                if(fs.exists(path(outputpath))):
+                        fs.delete(path(outputpath),True)
+
+                orders=inputpath + "/orders"
+                counter=sc.accumulator(0)
+                def OrderTuples(order):
+                        counter.add(1)
+                        return (int(order.split(",")[0]),1)
+                ordersFiltered = sc.textFile(orders). \
+                    filter(lambda order : month in order.split(",")[1]). \
+                    map(lambda order : OrderTuples(order))
+                print(counter)
+                orderitems=inputpath + "/order_items"
+                orderitemsFiltered = sc.textFile(orderitems). \
+                        map(lambda oi : (int(oi.split(",")[1]),(int(oi.split(",")[2]),float(oi.split(",")[4]))))
+                revenueByProductId=orderitemsFiltered.join(ordersFiltered).map(lambda rec : rec[1][0]).reduceByKey(lambda x,y: x+y)
+
+                with open(localdir + "/products/part-00000") as file:
+                        products=file.read().splitlines()
+                productsDict=dict(map(lambda p : (int(p.split(",")[0]),p.split(",")[2]),products))
+                productsBroadcast=sc.broadcast(productsDict)
+                revenueByProductName=revenueByProductId.map(lambda p : f"{productsBroadcast.value[p[0]]}\t{round(p[1],2)}")
+                for i in revenueByProductName.take(10):
+                        print(i)
+                revenueByProductName.coalesce(1).saveAsTextFile(outputpath)
+                print(f"COUNTER IS:{counter}")
+except ImportError as e:
+        print("Can not import spark modules",e)
+sys.exit(1)
+
+
+EXECUTION:
+spark-submit --master yarn --conf spark.ui.port=21888 --num-executors 2 --executor-memory 512M /home/pathirippilly/spark2_jobs/src/main/python/RevenuePerProductForMonthBroadcast.py prod
+
+
+Repartition v/s coalesce:
+
+By Default when you read a file from HDFS , the minimum number of partitions created for rdd by default is defined by the value of sc.defaultParallelism (spark.default.parallelism)
+. Value for this will be sum of all physical cores of your machine. But if the file size is greater than the blocksize (i.e 128mb), no of partitions created will be equal 
+to no.of input splits (i.e, no.of blocks read).
+
+Repartition always do a full shuffle and create new partitions with almost equal no.of records.Usimg Repartition we can increase or decrease the no.of partitions.
+Since it uses a full shuffle performance overhead is there.While coalesce  can be used only to decrease the no.of partitions and it won't do a full shuffle.
+it will merge the existing partitions. But this will make the partition size consistent,so that no.of records of each partitions will have a good difference.
+But while reducing the no.of partitions , coalesce will perform faster than repartition since it avoids a full shuffle. But it is also said that spark will work
+better with partitions of equal size. 
+
+Usually after operations like join,filter,aggregations , no.of records in each partitions will change and it won't be almost same.So in that cases we should
+consider applying repartition.
+
+
+
+17. DATAFRAMES
+
+Basics
+******
+
+>>reading a csv to data frame :
+spark.read.csv('/public/retail_db/orders')
+
+here you will have no.of columns similar to no.of commas in file 
+
+>>reading a textfile to data frame :
+spark.read.text('/public/retail_db/orders')
+
+here each line from file is a column value. so Only one column is created.
+
+>>reading a csv to data frame with columns :
+orders=spark.read.csv('/public/retail_db/orders').toDF("order_id","order_date","order_customer_id","order_status")
+
+here , eventhough column names are created , still , 'stringType' will be the default data type since we are not specifying it seperately
+
+>>reading a csv and casting the datatypes to what it is required to be:
+
+method1: Casting inside select statement
+from pyspark.sql.types import  *
+from pyspark.sql.functions import *
+
+orders=spark.read.csv('/public/retail_db/orders').\
+    toDF("order_id","order_date","order_customer_id","order_status").\
+    select(col("order_id").cast(IntegerType()),to_timestamp("order_date",
+                                                            "yyyy-MM-dd HH:mm:ss").alias("order_date"),
+           col("order_customer_id").cast(IntegerType()),"order_status")
+
+		   
+method2: casting inside withColumn 
+from pyspark.sql.types import *
+orders=spark.read.csv('/public/retail_db/orders').\
+    toDF("order_id","order_date","order_customer_id","order_status")
+	orders=orders.withColumn('order_id',orders.order_id.cast(IntegerType()))
+	
+	
+	
+method3: using explicit schema to define the table
+from pyspark.sql.types import *
+
+schema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+ordersrdd=spark.sparkContext.textFile('/public/retail_db/orders').map(lambda x : (int(x.split(",")[0]),datetime.strptime(x.split(",")[1],"%Y-%m-%d %H:%M:%S.%f"),
+int(x.split(",")[2]),x.split(",")[3]))
+
+orders=spark.createDataFrame(ordersrdd,schema)
+
+method4(most preferred):implemenation of schema while reading as a dataframe
+
+schema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+spark.read.schema(ordersschema).csv("/public/retail_db/orders")
+OR
+spark.read.schema(ordersschema).format("csv").load("/public/retail_db/orders")
+
+
+
+>>reading a hive table using spark.read.table to DATAFRAME:
+
+orders=spark.read.table("pathirippilly_retail_db_orc.orders");
+
+>>reading from a remote RDBMS DB into dataframe (here its mysql):
+
+step 1:
+if you are using it in a spark shell:
+
+launch the spark shell (spark-submit)with --jars option as well as --driver-class-path
+
+ pyspark --master yarn --conf spark.ui.port=21111 --conf spark.dynamicallocationenabled=false --num-executors 2 --executor-memory 512M \
+ --jars /usr/share/java/mysql-connector-java.jar \
+ --driver-class-path /usr/share/java/mysql-connector-java.jar
+
+if you are writing a spark program and supposed to do a spark-submit:
+
+you need to pass below two parameters
+
+--jars /usr/share/java/mysql-connector-java.jar 
+--driver-class-path /usr/share/java/mysql-connector-java.jar
+
+step2:
+method1:
+
+spark.read.format("jdbc").\
+option("url","jdbc:mysql://ms.itversity.com").\
+option("dbtable","retail_db.orders").\
+option("user","retail_user").\
+option("password","itversity").\
+load().show()	
+
+method2:
+
+spark.read.jdbc("jdbc:mysql://ms.itversity.com","retail_db.orders",properties={"user":"retail_user","password":"itversity"})	
+
+when you read from a rdbms table , ony a single partition is created by default.If you want to create multiple partitions, you need to pass it
+explicitely as below
+
+spark.read.jdbc("jdbc:mysql://ms.itversity.com","retail_db.orders",numPartitions=4,properties={"user":"retail_user","password":"itversity"})
+
+if I want specifically to partition based on a column, then I need to pass the column,lowerBound,upperBound name as below:
+
+
+spark.read.jdbc("jdbc:mysql://ms.itversity.com","retail_db.order_items",numPartitions=4,column="order_item_order_id",lowerBound=10000,
+upperBound=20000,properties={"user":"retail_user","password":"itversity"})
+
+here it will split the order_item_order_id as follows :
+
+partition1 - minvalue-12499 
+partition2 - 12500-14499 
+partition3 - 14500-17499 
+partition4 - 17500-maxvalue
+
+
+
+
+if you want to run a sql on remote rdbms and get the output into 
+
+orderrevenue=spark.read.jdbc("jdbc:mysql://ms.itversity.com","(select order_date,round(sum(order_item_subtotal),2) as revenue from retail_db.orders o join retail_db.order_items oi "
+                                                             "on (o.order_id=oi.order_item_order_id and o.order_status in('CLOSED','COMPLETE')) group by order_date) a",
+                             properties={"user":"retail_user","password":"itversity"})    
+		   
+		   
+
+
+getting count from a dataframe :
+
+orders.count()
+
+creating a tempview over dataframe and perform sql:
+
+orders.createTempView("orderstemp")
+spark.sql('select * from orderstemp limit 20')
+
+Creating a spak session object :
+
+spark = SparkSession.builder \
+            .appName("Transsum") \
+            .config("mapreduce.input.fileinputformat.input.dir.recursive", "true") \
+            .config("spark.sql.hive.verifyPartitionPath", "false") \
+            .config("hive.exec.dynamic.partition.mode", "nonstrict") \
+            .config("hive.exec.dynamic.partition", "true") \
+            .enableHiveSupport() \
+
+			
+			
+Dataframe Functions : pyspark.sql.functions
+*********************************************
+
+Date Manipulation 
+********************
+
+add_months(start, months)
+
+    current_date()	
+        Returns the current date as a :class:`DateType` column.
+current_timestamp()
+        Returns the current timestamp as a :class:`TimestampType` column.
+date_add(start, days)
+        Returns the date that is `days` days after `start`
+date_format(date, format)
+Converts a date/timestamp/string to a value of string in the format specified by the date
+        format given by the second argument.
+
+        A pattern could be for instance `dd.MM.yyyy` and could return a string like '18.03.1993'. All
+        pattern letters of the Java class `java.text.SimpleDateFormat` can be used.
+
+ date_sub(start, days)
+        Returns the date that is `days` days before `start`
+date_trunc(format, timestamp)
+ Returns timestamp truncated to the unit specified by the format.
+
+        :param format: 'year', 'yyyy', 'yy', 'month', 'mon', 'mm',
+            'day', 'dd', 'hour', 'minute', 'second', 'week', 'quarter'
+			
+datediff(end, start)
+        Returns the number of days from `start` to `end`.
+		
+ dayofmonth(col)
+        Extract the day of the month of a given date as integer.
+		
+ dayofweek(col)
+        Extract the day of the week of a given date as integer.
+dayofyear(col)
+        Extract the day of the year of a given date as integer.
+
+ from_unixtime(timestamp, format='yyyy-MM-dd HH:mm:ss')
+        Converts the number of seconds from unix epoch (1970-01-01 00:00:00 UTC) to a string
+        representing the timestamp of that moment in the current system time zone in the given
+        format.
+ from_utc_timestamp(timestamp, tz)
+        Given a timestamp like '2017-07-14 02:40:00.0', interprets it as a time in UTC, and renders
+        that time as a timestamp in the given time zone. For example, 'GMT+1' would yield
+        '2017-07-14 03:40:00.0'
+    hour(col)
+        Extract the hours of a given date as integer.
+ to_date(col, format=None)
+        Converts a :class:`Column` of :class:`pyspark.sql.types.StringType` or
+        :class:`pyspark.sql.types.TimestampType` into :class:`pyspark.sql.types.DateType`
+        using the optionally specified format. Specify formats according to
+        `SimpleDateFormats <http://docs.oracle.com/javase/tutorial/i18n/format/simpleDateFormat.html>`_.
+        By default, it follows casting rules to :class:`pyspark.sql.types.DateType` if the format
+        is omitted (equivalent to ``col.cast("date")``).
+to_timestamp(col, format=None)
+        Converts a :class:`Column` of :class:`pyspark.sql.types.StringType` or
+        :class:`pyspark.sql.types.TimestampType` into :class:`pyspark.sql.types.DateType`
+        using the optionally specified format. Specify formats according to
+        `SimpleDateFormats <http://docs.oracle.com/javase/tutorial/i18n/format/simpleDateFormat.html>`_.
+        By default, it follows casting rules to :class:`pyspark.sql.types.TimestampType` if the format
+        is omitted (equivalent to ``col.cast("timestamp")``).
+ to_utc_timestamp(timestamp, tz)
+        Given a timestamp like '2017-07-14 02:40:00.0', interprets it as a time in the given time
+        zone, and renders that time as a timestamp in UTC. For example, 'GMT+1' would yield
+        '2017-07-14 01:40:00.0'.
+ trunc(date, format)
+        Returns date truncated to the unit specified by the format.
+unix_timestamp(timestamp=None, format='yyyy-MM-dd HH:mm:ss')
+        Convert time string with given pattern ('yyyy-MM-dd HH:mm:ss', by default)
+        to Unix time stamp (in seconds), using the default timezone and the default
+        locale, return null if fail.
+
+        if `timestamp` is None, then it returns current timestamp.
+ weekofyear(col)
+        Extract the week number of a given date as integer.
+ year(col)
+        Extract the year of a given date as integer.
+
+        :param format: 'year', 'yyyy', 'yy' or 'month', 'mon', 'mm'
+
+Scenario1:
+
+
+# Convert a timestamp string of format "MM/dd/yyyy HH:mm:ss.SSSSSS" to "yyyy/MM/dd HH:mm:ss.SSSSSS" and save it as timestamp
+#Find day of month,date + 6 months,utc_time,year_beg,year,month
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from datetime import date,time,datetime
+from pyspark.sql.types import *
+
+# Convert a timestamp string of format "MM/dd/yyyy HH:mm:ss.SSSSSS" to "yyyy/MM/dd HH:mm:ss.SSSSSS" and save it as timestamp
+spark=SparkSession.builder.master("local").appName("DateManipulation").getOrCreate()
+df = spark.createDataFrame([('12/21/2015 23:21:20.689523', "product1")], ['dt', "product_name"])
+df = df.withColumn('row_index', monotonically_increasing_id())
+
+
+def convert_fmt(date_time):
+    return datetime.strptime(datetime.strptime(date_time, "%m/%d/%Y %H:%M:%S.%f").strftime("%Y/%m/%d %H:%M:%S.%f"),
+                             "%Y/%m/%d %H:%M:%S.%f")
+
+
+df_new = df.rdd.map(lambda x: (x.asDict()["row_index"], convert_fmt(x.asDict()["dt"]))).toDF(["index", "dt_new"])
+df = df_new.join(df, df_new.index == df.row_index).drop("row_index", "index", "dt")
+df=df.withColumn("day_of_mn",dayofmonth("dt_new")). \
+    withColumn("dt_6mnts", add_months(df.dt_new, 6)).\
+    withColumn("utc_time",to_utc_timestamp("dt_new", "UTC")).\
+    withColumn("year_beg",trunc("dt_new","YYYY")).\
+    withColumn("year",year("dt_new")). \
+    withColumn("month",month("dt_new"))
+df.printSchema()
+df.show()
+
+select v/s selectExpr 
+*********************
+
+Both select as well as selectExpr are having same functionalities but with different definition.
+
+scenario:
+Say If we need to get rank the orders in "orders" dataset for every customer in descending order of order_date
+
+implemenation using select :
+
+#Here I need import pyspark.sql.functions,pyspark.sql.window modules for getting dense_rank(),partitionBy(),orderBy() methods
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from pyspark.sql.window import Window
+from pyspark.sql.types import *
+
+spark=SparkSession.builder.master("local").appName("rankImplementation").getOrCreate()
+
+ordersschema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+orders1=spark.read.schema(ordersschema).csv("/public/retail_db/orders")
+
+window=Window.partitionBy(orders.order_customer_id).orderBy(orders.order_date.desc())
+
+orders1=orders.select("*",dense_rank().over(window).alias("rnk"))
+
+implemenation using selectExpr:
+#here we are implementing it as similar to SQL. So no need to seperate functions to be imported and used.
+
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+
+spark=SparkSession.builder.master("local").appName("rankImplementation").getOrCreate()
+
+ordersschema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+orders2=spark.read.schema(ordersschema).csv("/public/retail_db/orders")
+
+orders2=orders2.selectExpr("*","Dense_rank() over (partition by order_customer_id order by order_date) as rnk").show()
+
+where/filter
+****************
+
+'where' is an alias for 'filter'. It also accepts SQL type definitions in quotes as well as normal dataframe functions.
+
+scenario:
+
+Say if we need to filter CLOSED or COMPLETE orders from orders dataframe, we can do it as in below two methods 
+
+method1: using spark.sql.functions
+
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+
+spark=SparkSession.builder.master("local").appName("rankImplementation").getOrCreate()
+
+ordersschema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+orders=spark.read.schema(ordersschema).csv("/public/retail_db/orders").where(col("order_status").isin("CLOSED","COMPLETE"))
+
+method2: using sql expression
+
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+
+spark=SparkSession.builder.master("local").appName("rankImplementation").getOrCreate()
+
+ordersschema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+orders=spark.read.schema(ordersschema).csv("/public/retail_db/orders").where("order_status in ('COMPLETE','CLOSED')")
+
+when().otheriwse()
+************************
+scenario:
+As a part of checking the data quality , we need to ensure all rows satisfies the formula : 
+order_item_subtotal = (order_item_quantity*order_item_product_price). 
+For this we need to add a seperate column named "valid" 
+which should have 'Y' as value for all those rows which satisfy the above formula and for all other rows it should have 'N' as value.
+
+orderitemswithflag=orderitems.withColumn("valid",when(orderitems.order_item_subtotal != round((orderitems.order_item_product_price*orderitems.order_item_quantity),2),"N").otherwise("Y"))
+orderitemswithflag.where("valid='N'").count() # this should give the number of invalid records
+
+join()
+*********
+
+Scenario1:
+
+Get Daily Product revenue for all CLOSED and COMPLETE orders
+
+note: order and orderitems datasets are in HDFS and product dataset is in local file system
+
+
+
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+
+
+spark=SparkSession.builder.master("yarn-client").appName("GetDailyProductRevenue").getOrCreate()
+
+ordersschema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+orderitemsschema=StructType(
+[StructField("order_item_id",IntegerType(),False),StructField("order_item_order_id",IntegerType(),False),
+StructField("order_item_product_id",IntegerType(),False),StructField("order_item_quantity",IntegerType(),False),
+ StructField("order_item_subtotal", FloatType(), False),StructField("order_item_product_price", FloatType(), False)])
+
+productschema=StructType([StructField("product_id",IntegerType(),False),StructField("product_category_id",IntegerType(),False),StructField("product_name",StringType(),False),
+StructField("product_description",StringType(),False),StructField("product_price",FloatType(),False),StructField("product_image",StringType(),False)])
+
+orders=spark.read.schema(ordersschema).csv("/public/retail_db/orders").where(col("order_status").isin('COMPLETE','CLOSED')).select("order_id")
+orderitems=spark.read.schema(orderitemsschema).csv("/public/retail_db/order_items").select("order_item_order_id","order_item_product_id","order_item_subtotal")
+products=spark.read.schema(productschema).csv("/public/retail_db/products").select("product_id","product_name")
+
+
+orderrevenue=orders.join(orderitems,orders.order_id==orderitems.order_item_order_id).drop("order_id","order_item_order_id").groupBy("order_item_product_id").\
+agg(round(sum("order_item_subtotal"),2).alias("revenue")).join(products,products.product_id==orderitems.order_item_product_id).drop("order_item_product_id","product_id")
+
+Windowing and analytical functions
+************************************
+scenario1:(Implemenation of Ranking)
+Get Top N products per day
+
+
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+from pyspark.sql.window import Window
+from pyspark.sql import functions  as F
+
+
+spark=SparkSession.builder.master("yarn-client").appName("GetTopNProductsPerDay").getOrCreate()
+
+
+ordersschema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+orderitemsschema=StructType(
+[StructField("order_item_id",IntegerType(),False),StructField("order_item_order_id",IntegerType(),False),
+StructField("order_item_product_id",IntegerType(),False),StructField("order_item_quantity",IntegerType(),False),
+StructField("order_item_subtotal", FloatType(), False),StructField("order_item_product_price", FloatType(), False)])
+
+productschema=StructType([StructField("product_id",IntegerType(),False),StructField("product_category_id",IntegerType(),False),
+StructField("product_name",StringType(),False),StructField("product_description",StringType(),False),StructField("product_price",
+FloatType(),False),StructField("product_image",StringType(),False)])
+
+orders=spark.read.schema(ordersschema).csv("/public/retail_db/orders").where(col("order_status").isin('COMPLETE','CLOSED')).select("order_id","order_date")
+orderitems=spark.read.schema(orderitemsschema).csv("/public/retail_db/order_items").select("order_item_order_id","order_item_product_id","order_item_subtotal")
+products=spark.read.schema(productschema).csv("/public/retail_db/products").select("product_id","product_name")
+
+perDayProductRevenue=orders.join(orderitems,orders.order_id==orderitems.order_item_order_id).drop("order_id","order_item_order_id").\
+groupBy("order_item_product_id","order_date").agg(round(sum("order_item_subtotal"),2).alias("revenue")).\
+join(products,products.product_id==orderitems.order_item_product_id).drop("order_item_product_id").\
+select("product_id","product_name","order_date","revenue")
+
+perDayProductRevenue=orders.join(orderitems,orders.order_id==orderitems.order_item_order_id).drop("order_id","order_item_order_id").\
+groupBy("order_item_product_id","order_date").agg(round(sum("order_item_subtotal"),2).alias("revenue"),F.count("order_item_subtotal").alias("cnt")).\
+join(products,products.product_id==orderitems.order_item_product_id).drop("order_item_product_id").\
+select("product_id","product_name","order_date","revenue","cnt")
+
+windowspec=Window.partitionBy("order_date").orderBy(desc("revenue"))
+
+
+topNproductsPerDay=perDayProductRevenue.withColumn("rnk",dense_rank().over(windowspec)).where("rnk<=10").drop("rnk")
+
+
+
+
+
+scenario2:(Implemenation of lead and lag)
+
+get Top 2 products per day and calculate their difference in revenue
+
+
+topNproductsPerDay=perDayProductRevenue.withColumn("rnk",dense_rank().over(windowspec)).where("rnk<=2").drop("rnk")
+		
+topNproductsPerDay.withColumn("leadval",lead("revenue").over(windowspec)).\
+withColumn("lagval",lag("revenue").over(windowspec)).\
+withColumn("diff",col("revenue")-(when(col("leadval").isNotNull(),col("leadval")).otherwise(0)+when(col("lagval").isNotNull(),col("lagval")).otherwise(0))).\
+drop("leadval","lagval").show()
+
+OR
+
+topNproductsPerDay.withColumn("leadval",lead("revenue").over(windowspec)).\
+withColumn("diff",col("revenue")-col("leadval")).\
+drop("leadval").show()	
+
+
+18.SAPRK-SQL	
+
+scenario: DailyProductRevenue
+
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+
+
+spark=SparkSession.builder.master("yarn-client").appName("GetDailyProductRevenue").getOrCreate()
+
+ordersschema=StructType(
+[StructField("order_id",IntegerType(),False),StructField("order_date",TimestampType(),False),
+StructField("order_customer_id",IntegerType(),False),StructField("order_status",StringType(),False)])
+
+orderitemsschema=StructType(
+[StructField("order_item_id",IntegerType(),False),StructField("order_item_order_id",IntegerType(),False),
+StructField("order_item_product_id",IntegerType(),False),StructField("order_item_quantity",IntegerType(),False),
+ StructField("order_item_subtotal", FloatType(), False),StructField("order_item_product_price", FloatType(), False)])
+
+productschema=StructType([StructField("product_id",IntegerType(),False),StructField("product_category_id",IntegerType(),False),StructField("product_name",StringType(),False),
+StructField("product_description",StringType(),False),StructField("product_price",FloatType(),False),StructField("product_image",StringType(),False)])
+
+orders=spark.read.schema(ordersschema).csv("/public/retail_db/orders")
+orderitems=spark.read.schema(orderitemsschema).csv("/public/retail_db/order_items")
+products=spark.read.schema(productschema).csv("/public/retail_db/products")
+
+orders.createOrReplaceTempView("orderstab")
+orderitems.createOrReplaceTempView("orderitemstab")
+products.createOrReplaceTempView("productstab")
+
+order_revenue=spark.sql("select product_id,product_name,order_date,round(sum(order_item_subtotal),2) as revenue "\
+"from orderitemstab oi join orderstab o on(oi.order_item_order_id=o.order_id and o.order_status in ('CLOSED','COMPLETE')) "\
+"join productstab p on (oi.order_item_product_id=p.product_id) "\
+"group by product_id,product_name,order_date order by order_date desc")
+
+
+	
+
+
+
+
+
+

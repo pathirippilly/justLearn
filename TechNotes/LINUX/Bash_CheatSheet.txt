@@ -1,0 +1,8 @@
+##Print tota number of columns and lengths
+##*****************************************
+
+metafilename=metadata_stat_$(date +%s%3N).txt;echo file_name\|distinct_no_cols\|distinct_no_lengths>$metafilename;for filename in `hadoop fs -ls /user/pathirippilly/data/rawfiles/ | awk '{print $NF}' | grep .dat$ | tr '\n' ' '`; do echo $filename \|$(hadoop fs -cat $filename | awk -F "," '{print NF}'|sort|uniq|tr "\n" "," | sed 's/\(.*\),/\1 /') \|$(hadoop fs -cat $filename | awk '{print length($0)}'|sort|uniq|tr "\n" "," | sed 's/\(.*\),/\1 /') >> $metafilename;done
+
+hadoop fs -cat /user/pathirippilly/data/rawfiles/products.dat | awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{if($1==685) print NF}'
+
+https://www.tutorialspoint.com/awk/ --> awk help

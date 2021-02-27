@@ -1,0 +1,281 @@
+/*
+Word Count Map Reduce Program in Java
+*************************************
+Say we have a file large_deck of 693 mb
+and we need to get the count of records/lines in the file using a java program
+
+what a non-mapreduce will do:
+A serilized program which  reads the data using file system APIs and then looping through it 
+line by line to get the count and then emit the output or store it in another file 
+
+what a mapreduce will do:
+>> map function and framework read the data (typically line by line) from HDFS
+>> intermediary Shuffle and Sort will take care of grouping and sorting based up on a key 
+>> reduce function will take care of aggregating the data and writing back to HDFS 
+>> reading ->filtering and transformation ->  sorting and grouping -> aggregation -> writing 
+
+You need to have a driver code, mapper code and reducer code.
+Driver code will have the configurations set
+mapper will have the transformations 
+reducer will have the aggregations
+*/
+
+/*Driver code example for a simple word count program*/
+
+package demo.cards.drivers;
+
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.Path;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.NullWritable;
+
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+//import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+//import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
+import demo.cards.mappers.RecordMapper;
+import demo.cards.reducers.NoKeyRecordCountReducer;
+
+/* This program can be used for 
+ * select count(1) from <table_name>;
+ * Steps
+ * 1. Develop mapper function
+ * 2. Develop reducer function
+ * 3. Job configuration
+ */
+
+public class RowCount extends Configured implements Tool {
+
+	public static void main(String[] args) throws Exception {
+		int exitCode = ToolRunner.run(new RowCount(), args);
+		System.exit(exitCode);
+
+	}
+
+	public int run(String[] args) throws Exception {
+		Job job = Job.getInstance(getConf(),
+				"Row Count using built in mappers and reducers");
+
+		job.setJarByClass(getClass());
+
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		// We are not setting input format class and hence uses
+		// (TextInputFormat)
+		// job.setInputFormatClass(TextInputFormat.class);
+
+		// Custom mapper (RecordMapper) to assign 1 for each record
+		// Input to mapper <Lineoffset as key, entire line as value>
+		// Default behavior of default input format TextInputFormat
+		job.setMapperClass(RecordMapper.class);
+		// Output from mapper
+		// <count, 1>
+		// <count, 1> so on
+
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(IntWritable.class);
+
+		// Built-in reducer
+		// Input to reducer <count, {1, 1, 1, ...}>
+		// job.setReducerClass(IntSumReducer.class);
+		// Output from reducer <count, Number of records>
+
+		// Custom reducer
+		// If you do not want to see "count" as part of output
+		// and just see the record count as in select count query
+		job.setReducerClass(NoKeyRecordCountReducer.class);
+		// Output from reducer <Number of records>
+
+		job.setOutputKeyClass(NullWritable.class);
+		job.setOutputValueClass(IntWritable.class);
+
+		// We are not setting output format class and hence uses default
+		// (TextOutputFormat)
+
+		// job.setOutputFormatClass(TextOutputFormat.class);
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+		return job.waitForCompletion(true) ? 0 : 1;
+	}
+
+}
+
+/*Mapper Code*/
+
+package demo.cards.mappers;
+
+import java.io.IOException;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+
+public class RecordMapper extends
+		Mapper<LongWritable, Text, Text, IntWritable> {
+
+	@Override
+
+	public void map(LongWritable key, Text record, Context context)
+			throws IOException, InterruptedException {
+		context.write(new Text("count"), new IntWritable(1));
+	}
+	/*<count, 1>
+	 *<count, 1>
+	 *<count, 1>
+	 * there will be 52
+	 */
+
+}
+
+
+/*Reducer Code*/
+
+package demo.cards.reducers;
+
+import java.io.IOException;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Reducer;
+
+public class NoKeyRecordCountReducer extends
+		Reducer<Text, IntWritable, NullWritable, IntWritable> {
+
+	@Override
+	public void reduce(Text key, Iterable<IntWritable> records, Context context)
+			throws IOException, InterruptedException {
+		int sum = 0;
+
+		for (IntWritable record : records) {
+			sum += record.get();
+		}
+
+		context.write(NullWritable.get(), new IntWritable(sum));
+		//output for our largedeck
+		//count	54525952
+		
+		//output for out deckofcards
+		//count	52
+		
+	}
+}
+
+/*
+
+To run this in Hadoop cluster , you need to build it as a maven project
+For the maven you build , you need to set the below pom.xml 
+
+*/
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>lab</groupId>
+  <artifactId>cards</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>cards</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.2</version>
+      <scope>test</scope>
+    </dependency>
+  
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+			<version>2.7.3.2.6.5.0-292</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-yarn-common</artifactId>
+			<version>2.7.3.2.6.5.0-292</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-mapreduce-client-common</artifactId>
+			<version>2.7.3.2.6.5.0-292</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-mapreduce-client-core</artifactId>
+			<version>2.7.3.2.6.5.0-292</version>
+		</dependency>
+		
+	<dependency>
+<groupId>jdk.tools</groupId>
+<artifactId>jdk.tools</artifactId>
+<version>1.8.0_151</version>
+<scope>system</scope>
+<systemPath>${JAVA_HOME}/lib/tools.jar</systemPath>
+</dependency>
+		
+	</dependencies>
+  
+  <repositories>
+  
+<repository> 
+<releases> 
+<enabled>true</enabled> 
+</releases> 
+<snapshots> 
+<enabled>true</enabled> 
+</snapshots> 
+<id>hortonworks.extrepo</id> 
+<name>Hortonworks HDP</name> 
+<url>http://repo.hortonworks.com/content/repositories/releases</url> 
+</repository>
+
+<repository>
+			<id>hortonworks</id>
+			<url>http://repo.hortonworks.com/content/repositories/public/</url>
+		</repository>	
+<repository>
+			<id>test</id>
+			<url>http://repo.hortonworks.com/content/repositories/re-hosted/</url>
+		</repository>
+
+</repositories>
+
+
+  
+</project>
+
+
+
+/*You need to in to a jar and need to run the file using below command in hadoop cluster
+*/
+hadoop jar gettingstarted_mapreduce.jar demo.cards.driver.RowCount deckofcards.txt output
+// Here input file is deckofcards.txt
+//output path is output
+//jar file name is gettingstarted_mapreduce.jar
+//driver class is demo.cards.driver.RowCount
+
+/*Creating a Jar file from eclipse */
+From file > click on export > under java folder,select jars 
+(note : runnable jars will be of high size than simple jars since all dependent jars will be included since we have develped a maven project we can select jars)
+give a name to the jar file and click on finish
+
+created jar file can be validated using below command 
+jar tvf A:\lab\Eclipse\Jars\gettingstarted_mapreduce.jar

@@ -1,0 +1,63 @@
+spark dynamic allocation -- 	spark-defaults.conf
+
+https://aws.amazon.com/blogs/big-data/best-practices-for-successfully-managing-memory-for-apache-spark-applications-on-amazon-emr/
+
+spark-submit --master yarn-cluster \
+    --driver-cores 2 \
+    --driver-memory 2G \
+    --num-executors 10 \
+    --executor-cores 5 \
+    --executor-memory 2G \
+    --conf spark.dynamicAllocation.minExecutors=5 \
+    --conf spark.dynamicAllocation.maxExecutors=30 \
+    --conf spark.dynamicAllocation.initialExecutors=10 \ # same as --num-executors 10
+    --class com.spark.sql.jdbc.SparkDFtoOracle2 \
+    Spark-hive-sql-Dataframe-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+
+	
+>>How to choose No of Executors and Memory :
+
+
+6 Nodes
+16 Cores (16 * 6 = 96 cores)
+64 BG per node
+
+Smallest possible executor : 
+1 core / 4 GB RAM 
+So 16 executors on each machine
+
+In above approach we are not utilizing multi processing capability of JVM.
+only with limited resources each executor will perform worse
+
+Largest possible Executor :
+16 cores/64 GB RAM for executor 
+1 executor per node
+
+Here problem is any single executor in any node will consume all memory and all cores.
+There is lot of HDFS IO contention : Snce all cores will compete each other to get the resources for getting the task done. Read and write will become very slow.
+No resources for OS
+No Memory overhead for Yarn and spark (off heap memory)
+
+Optimal way :
+
+Executor and Executor Core :
+No Of Cores : 96 - No Of Machines(nodes) : 6 = 90
+No of Cores per machine : 90/6 =  15 cores
+No of executor cores : 5
+So no of executor per machine : 15/5 = 3
+
+Memory :
+Available per machine = 64 -1  = 63 GB
+Available per executor = 63/3 = 21 GB
+Yarn Overhead = 2 GB (7% of executor memory)
+Per Executor m0emory = 19 GB 
+
+
+Full memory requested to yarn per executor =
+          spark-executor-memory + spark.yarn.executor.memoryOverhead.
+spark.yarn.executor.memoryOverhead = 
+        	Max(384MB, 7% of spark.executor-memory)
+So, if we request 20GB per executor, AM will actually get 21GB + memoryOverhead = 20 + 7% of 20GB = ~23GB memory for us.
+
+	
+	

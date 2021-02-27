@@ -1,0 +1,206 @@
+SPARK/HIVE NOTES
+*************
+
+1.Different File formats in spark/Hive
+
+TEXTFILE :
+
+TEXTFILE format is a famous input/output format used in Hadoop. In Hive if we define a table as TEXTFILE it can load data of from CSV (Comma Separated Values), 
+delimited by Tabs, Spaces, and JSON data. This means fields in each record should be separated by comma or space or tab or it may be JSON(JavaScript Object Notation) data.
+By default, if we use TEXTFILE format then each line is considered as a record.
+
+SEQUENCE FILE : 
+
+We know that Hadoop’s performance is drawn out when we work with a small number of files with big size rather than a large number of files with small size. 
+If the size of a file is smaller than the typical block size in Hadoop, we consider it as a small file. 
+Due to this, a number of metadata increases which will become an overhead to the NameNode. To solve this problem sequence files are introduced in Hadoop. 
+Sequence files act as a container to store the small files.
+
+Sequence files are flat files consisting of binary key-value pairs. When Hive converts queries to MapReduce jobs, 
+it decides on the appropriate key-value pairs to be used for a given record. Sequence files are in the binary format 
+which can be split and the main use of these files is to club two or more smaller files and make them as a one sequence file.
+
+In Hive we can create a sequence file by specifying STORED AS SEQUENCEFILE in the end of a CREATE TABLE statement.
+There are three types of sequence files:
+• Uncompressed key/value records.
+• Record compressed key/value records – only ‘values’ are compressed here
+• Block compressed key/value records – both keys and values are collected in ‘blocks’ separately and compressed. The size of the ‘block’ is configurable.
+
+Hive has its own SEQUENCEFILE reader and SEQUENCEFILE writer libraries for reading and writing through sequence files.
+
+RCFILE : 
+
+RCFILE stands of Record Columnar File which is another type of binary file format which offers high compression rate on the top of the rows.
+RCFILE is used when we want to perform operations on multiple rows at a time.
+RCFILEs are flat files consisting of binary key/value pairs, which shares many similarities with SEQUENCEFILE. RCFILE stores columns of a table in form 
+of record in a columnar manner. It first partitions rows horizontally into row splits and then it vertically partitions each row split in a columnar way. 
+RCFILE first stores the metadata of a row split, as the key part of a record, and all the data of a row split as the value part. This means that RCFILE 
+encourages column oriented storage rather than row oriented storage.
+This column oriented storage is very useful while performing analytics. It is easy to perform analytics when we “hive’ a column oriented storage type.
+Facebook uses RCFILE as its default file format for storing of data in their data warehouse as they perform different types of analytics using Hive.
+
+ORCFILE:
+
+ORC stands for Optimized Row Columnar which means it can store data in an optimized way than the other file formats. ORC reduces the size of the original data up to 
+75%(eg: 100GB file will become 25GB). As a result the speed of data processing also increases. ORC shows better performance than Text, Sequence and RC file formats.
+An ORC file contains rows data in groups called as Stripes along with a file footer. ORC format improves the performance when Hive is processing the data.
+
+
+Parquet:
+
+Parquet stores binary data in a column-oriented way, where the values of each column are organized so that they are all adjacent, enabling better compression.
+It is especially good for queries which read particular columns from a “wide” (with many columns) table since only needed columns are read and IO is minimized. 
+Read this for more details on Parquet.
+
+Avro :
+
+Avro stores the data definition in JSON format making it easy to read and interpret, the data itself is stored in binary format making it compact and efficient. 
+Avro files include markers that can be used to splitting large data sets into subsets suitable for Apache MapReduce™ processing. Some data exchange services 
+use a code generator to interpret the data definition and produce code to access the data. 
+Avro doesn't require this step, making it ideal for scripting languages.
+
+A key feature of Avro is robust support for data schemas that change over time - often called schema evolution.
+Avro handles schema changes like missing fields, added fields and changed fields; as a result, old programs can 
+read new data and new programs can read old data. Avro includes API's for Java, Python, Ruby, C, C++ and more. 
+Data stored using Avro can be passed from programs written in different languages, even from a complied language
+like C to a scripting language like Apache Pig™.
+
+
+AVRO v/s PARQUET v/S ORC :
+
+
+Whats the same:
+
+>>ORC, Parquet, and Avro are also machine-readable binary formats, which is to say that the files look like gibberish to humans. 
+If you need a human-readable format like JSON or XML, then you should probably re-consider why you’re using Hadoop in the first place.
+
+>>Files stored in ORC, Parquet, and Avro formats can be split across multiple disks, which lends themselves to scalability and parallel processing. 
+You cannot split JSON and XML files, and that limits their scalability and parallelism.
+
+>>All three formats carry the data schema in the files themselves, which is to say they’re self-described. You can take an ORC, Parquet, or 
+Avro file from one cluster and load it on a completely different machine, and the machine will know what the data is and be able to process it.
+
+>>In addition to being file formats, ORC, Parquet, and Avro are also on-the-wire formats, which means you can use them to pass data between nodes in your Hadoop cluster.
+
+Whats Different:
+
+>>The biggest difference between ORC, Avro, and Parquet is how they store the data. Parquet and ORC both store data in columns, 
+while Avro stores data in a row-based format. By their very nature, column-oriented data stores are optimized for read-heavy analytical workloads, 
+while row-based databases are best for write-heavy transactional workloads.
+
+>>Another aspect to consider is support for schema evolution, or the ability for the file structure to change over time. 
+Among the two columnar formats, ORC offers better schema evolution, according to Nexla. However, Avro offers superior 
+schema evolution thanks to its innovative use of JSON to describe the data, while using binary format to optimize storage size.
+
+Some of the features which ORC is having upper hand over parquet:
+
+
+Higher order compression
+Predicate Push Down
+Inline Indexing
+
+
+Additional Points:
+
+Notes on Compression Codecs:
+https://www.dummies.com/programming/big-data/hadoop/compressing-data-in-hadoop/
+
+AVRO v/s PARQUET v/S ORC:
+
+https://www.datanami.com/2018/05/16/big-data-file-formats-demystified/
+
+Benefits of ORC over PARQUET :
+
+https://hortonworks.com/blog/orcfile-in-hdp-2-better-compression-better-performance/
+
+
+2.Repartition v/s coalesce:
+
+The repartition algorithm does a full shuffle of the data and creates equal sized partitions of data. 
+coalesce combines existing partitions to avoid a full shuffle.
+
+For reducing the number of partitions ,its always advised to use coalesce over repartition because
+it avoids a full shuffle. If it's known that the number is decreasing then the executor can safely keep data on the minimum number of partitions, 
+only moving the data off the extra nodes, onto the nodes that we kept.
+
+3.RDD v/s Dataframe v/s Dataset
+
+
+RDD:
+
+RDD was the primary user-facing API in Spark since its inception. At the core, an RDD is an immutable distributed collection of elements of your data, 
+partitioned across nodes in your cluster that can be operated in parallel with a low-level API that offers transformations and actions.
+
+When to use it ?
+
+Consider these scenarios or common use cases for using RDDs when:
+
+you want low-level transformation and actions and control on your dataset;
+your data is unstructured, such as media streams or streams of text;
+you want to manipulate your data with functional programming constructs than domain specific expressions;
+you don’t care about imposing a schema, such as columnar format, while processing or accessing data attributes by name or column; and
+you can forgo some optimization and performance benefits available with DataFrames and Datasets for structured and semi-structured data
+
+Dataframes:
+
+Like an RDD, a DataFrame is an immutable distributed collection of data. Unlike an RDD, data is organized into named columns, like a table in a relational database. 
+Designed to make large data sets processing even easier, DataFrame allows developers to impose a structure onto a distributed collection of data, allowing higher-level abstraction; 
+it provides a domain specific language API to manipulate your distributed data; and makes Spark accessible to a wider audience, beyond specialized data engineers
+
+These are the dataset that are arranged in named columns. These are relational data items with good optimization technique. Although Spark DataFrame is above RDD, 
+it possesses all the features of an RDD. DataFrames are ahead of RDD as it provides memory management plan.
+
+DataSets:
+
+Starting in Spark 2.0, Dataset takes on two distinct APIs characteristics: a strongly-typed API and an untyped API 
+Conceptually, consider DataFrame as an alias for a collection of generic objects Dataset[Row], where a Row is a generic untyped JVM object. Dataset, by contrast, 
+is a collection of strongly-typed JVM objects, dictated by a case class you define in Scala or a class in Java.
+
+It maps to relational schema. Dataset gives the benefits of both type safety and Object oriented programming interface. 
+Dataset clubs the property of both DataFrame and RDD. And thus, provides better functional programming interface.
+
+4. Major differences between spark 1.6.x v/s 2.x
+
+>>DataFrame APIs are merged with Datasets APIs, unifying data processing capabilities across libraries. 
+Because of this unification, developers now have fewer concepts to learn or remember, and work with a single high-level and type-safe API called Dataset.
+
+>>Starting in Spark 2.0, Dataset takes on two distinct APIs characteristics: a strongly-typed API and an untyped API
+Conceptually, consider DataFrame as an alias for a collection of generic objects Dataset[Row], where a Row is a generic untyped JVM object
+Dataset, by contrast, is a collection of strongly-typed JVM objects, dictated by a case class you define in Scala or a class in Java.
+
+>>Automatic memory optimization is one of the cool feature of spark 2.x
+
+>>For machine learning new library mlib is available as MLlib is deprecated , mlib has more machine learning functions.
+>>Spark 2.x works well with scala 2.11.x if you are using scala spark.
+>>SparkSessions is available in spark 2.x which provides quick & easy access to SQLContext and HiveContext.
+
+The latest and greatest from Spark will be a whole lot efficient as compared to predecessors. 
+Spark 2.x has given  focus on a combination of Parquet and caching to achieve even better throughput.
+
+Few other feature changes are listed below:
+
+RegisterTempTable is deprecated and is replaced with CreateOrReplaceTempView.
+UnionAll is deprecated and is replaced with Union.
+
+5. Static Partition v/s Dynamic Partition in Hive 
+
+Partitions are created when data is inserted into table. Depending on how you load data you would need partitions. 
+Usually when loading files (big files) into Hive tables static partitions are preferred. That saves your time in loading 
+data compared to dynamic partition. You "statically" add a partition in table and move the file into the partition of the table. 
+Since the files are big they are usually generated in HDFS. You can get the partition column value form the filename, day of date etc 
+without reading the whole big file.
+
+Incase of dynamic partition whole big file i.e. every row of the data is read and data is partitioned through a MR job into the destination tables 
+depending on certain field in file. So usually dynamic partition are useful when you are doing sort of a ETL flow in your data pipeline. 
+e.g. you load a huge file through a move command into a Table X. then you run a insert query into a Table Y and partition data based on field in table X say day , country. 
+You may want to further run a ETL step to partition the data in country partition in Table Y into a Table Z where data is partitioned based on cities for a particular country only. 
+etc.
+
+Thus depending on your end table or requirements for data and in what form data is produced at source you may choose static or dynamic partition.
+
+
+6.How to controll partitions formed during shuffling phase
+
+spark.conf.set('spark.sql.shuffle.partitions',2)
+
+so here it wll set the spark.sql.shuffle.partitions to 2 so that for any shuffle phase , it will use only tw partitions

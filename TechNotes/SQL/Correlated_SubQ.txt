@@ -1,0 +1,159 @@
+1.duplicate handling  SQL
+
+Query 1 (This can be run in any DB):
+
+Duplicated table : test_dup
+
++------+------+
+| id1  | id2  |
++------+------+
+|    1 |   11 |
+|    1 |   12 | 
+|    1 |   13 |
+|    2 |   11 |
+|    3 |   11 |
+|    3 |   12 |
+|    4 |   11 |
+|    5 |   11 |
+|    5 |   12 |
+|    5 |   15 |
+|    6 |   10 |
++------+------+
+
+Display duplicates alone :
+
+Query 1: using correlated SQL (This won't work if entire record is duplicated)
+
+SELECT  id1,id2 FROM test_dup A WHERE 0!= (SELECT count(1)  FROM test_dup B  WHERE A.id1=B.id1 and A.id2 < B.ID2); 
+-- this correlated SQL will consider rows with lowest id2 values as duplicates for each id1
+
+SELECT  id1,id2 FROM test_dup A WHERE 0!= (SELECT count(1)  FROM test_dup B  WHERE A.id1=B.id1 and A.id2 > B.ID2); 
+
+-- this correlated SQL will consider rows with highest id2 values as duplicates for each id1
+
+
+Query 2: using a self join 
+SELECT  distinct id1,id2 FROM test_dup A,test_dup B where A.id1=B.id1 and A.id2 < B.ID2; (This won't work if entire record is duplicated)
+-- this will consider rows with lowest id2 values as duplicates for each id1 , but we need to use a distinct to avoid duplicated results 
+
+SELECT  distinct id1,id2 FROM test_dup A,test_dup B where A.id1=B.id1 and A.id2 > B.ID2;
+-- this will consider rows with highest id2 values as duplicates for each id1 , but we need to use a distinct to avoid duplicated results 
+
+
+query 3 : using ROW_NUMBER() over a window --> this many be supporting in some SQL engines (This will work even if entire records is duplicated)
+
+select id1,id2 from (select  id1,id2,row_number() over (partition by id1 order by id2 desc) rn) temp where rn>1
+-- this will consider rows with lowest id2 values as duplicates for each id1
+
+select id1,id2 from (select  id1,id2,row_number() over (partition by id1 order by id2) rn) temp where rn>1
+-- this will consider rows with highest id2 values as duplicates for each id1
+
+query 4:
+
+
+
+ 
+
+
+insert into test_dup2
+select 1,11
+union all
+select 1,11
+union all
+select 2,12
+union all
+select 2,11
+union all 
+select 3,11
+union all
+select 4,11
+union all
+select 4,11
+;
+
+
+If Records are not that huge in the table 
+
+DELETE A
+FROM
+test_dup2 A
+WHERE 0!= (SELECT count(1)  FROM test_dup B  WHERE A.id1=B.id1 and A.id2 < B.ID2);
+
+
+
+SELECT  id1,id2 FROM test_dup A,test_dup B where A.id1=B.id1 and A.id2 < B.ID2
+
+SELECT  id1,id2 FROM test_dup A WHERE 0!= (SELECT count(1)  FROM test_dup B  WHERE A.id1=B.id1 and A.id2 < B.ID2);
+
+SELECT  id1,id2 FROM test_dup A WHERE 2= (SELECT count(1)  FROM test_dup B  WHERE A.id1=B.id1 and A.id2 < B.ID2);
+
+
+
+
++------+------+
+| id1  | id2  |
++------+------+
+|    1 |   11 |
+|    1 |   12 | 
+|    1 |   13 |
+|    2 |   11 |
+|    3 |   11 |
+|    3 |   12 |
+|    4 |   11 |
+|    5 |   11 |
+|    5 |   12 |
+|    5 |   15 |
+|    6 |   10 |
++------+------+
+
+
+
+
+2.correlated sub squery SQL 
+
+
+create table employee_sal (id int,dept int,salary int);
+insert into employee_sal
+select 1,1,10000  UNION
+select 2,1,50000  UNION
+select 3,1,11000  UNION
+select 4,1,10000  UNION
+select 5,1,12000  UNION
+select 6,2,12000  UNION
+select 7,2,250000 UNION
+select 8,2,5000   UNION
+select 9,2,10000  UNION
+select 10,3,10000 UNION
+select 11,3,10000 UNION
+select 12,3,5000  UNION
+select 13,3,11000;
++------+------+--------+
+| id   | dept | salary |
++------+------+--------+
+|    1 |    1 |  10000 |
+|    2 |    1 |  50000 |
+|    3 |    1 |  11000 |
+|    4 |    1 |  10000 |
+|    5 |    1 |  12000 |
+|    6 |    2 |  12000 |
+|    7 |    2 | 250000 |
+|    8 |    2 |   5000 |
+|    9 |    2 |  10000 |
+|   10 |    3 |  10000 |
+|   11 |    3 |  10000 |
+|   12 |    3 |   5000 |
+|   13 |    3 |  11000 |
++------+------+--------+
+
+select * from employee_sal a where 1=(select count(1) from employee_sal b where  a.dept=b.dept and a.salary<b.salary);
+2nd highest salary
+
++------+------+--------+
+| id   | dept | salary |
++------+------+--------+
+|    5 |    1 |  12000 |
+|    6 |    2 |  12000 |
+|   10 |    3 |  10000 |
+|   11 |    3 |  10000 |
++------+------+--------+
+

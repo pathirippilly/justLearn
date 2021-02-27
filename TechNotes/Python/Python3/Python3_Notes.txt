@@ -1,0 +1,674 @@
+1. In Python3 print is a function while in python2 its a statement
+2. In Python3 integer division still gives you float while in python2 it gives only integer
+1/2 = 0.5 in python3
+1/2 = 0 in python2, instead you need to use 1/2.0
+
+Integer division in Python3 is achieved by '//'
+
+eg:
+1//2 = 0 in python3
+
+3. In Python3 map and filter returns respective objects  which is not iterable  while in Python2 they returns list 
+
+4.Generic custom map,reduce,filter functions:
+
+Structure of generic filter,map and reduce is as below:
+
+def myFilter(c,f):
+    newC=[]
+    for i in c:
+        if f(i):
+            newC.append(i)
+    return newC
+	
+def myMapper(c,f):
+    newC=[]
+    for i in c:
+        newC.append(f(i))
+    return newC
+	
+def myReducer(c,f):
+    t = c[0]
+    for i in c[1:]:
+        t=f(t,i)
+    return t
+
+
+
+5. itertools:
+
+>>groupby(iterable,key)
+
+	:
+	sub-iterators grouped by value of key(v)
+
+This will return a iterable groupby object
+each element is tuple with key as first element and iterable grouper object as second element
+elements of iterable grouper object are nothing but elements of the input iterable, having this key in it
+
+groupby always follows sorting, otherwise it won't function as expected
+
+>>filterfalse(predicate,sequenece):
+
+
+This will return all elements from sequence untill predicate is false
+OR
+elements of sequence where predicate is false
+
+predicate is usually a lambda function with some condition 
+Syntax  looks similar to filter() but exactly opposite in functioning
+
+>>starmap(func, seq):
+
+
+The starmap tool will create an iterator that can compute using the function and iterable provided. As the documentation mentions, 
+“the difference between map() and starmap() parallels the distinction between function(a,b) and function(*c).
+
+example:
+def add(a, b):
+	return a+b
+
+for item in starmap(add, [(2,3), (4,5)]):
+	print(item)
+	
+
+
+6.Numpy:
+**********
+This is a Linear Algebra library for Python
+
+Numpy arrays essentially come in two flavours:
+Vectors and Matrices
+Vectors are 1d (1-Dimensional) and matrices are 2d - 2dimensional
+
+a. importing numpy:
+
+import numpy as np
+
+b. Creating a numpy array:
+
+>>from a normal list:
+
+np.array([1,2,3]) #1d array
+np.array([1,2,3],[4,5,6],[7,8,9]) #2d array
+
+>>using np.arange(start,stop,step):
+
+stop is the only mandatory argument
+start is 0 by default and step is 1 by default
+
+np.arange(10) #print 0 to 9 numbers increment by 1
+
+np.arange(1,11,2) #print numbers from 1 to 11 increment by 2
+
+>>creating empty arrays initialized with zeros and ones:
+
+np.zeros(10) #This will create a 1d numpy array of 10 rows and columns of each element initialized with zeros
+np.zeros_like(10) #this will create a 1d array with a single element of value 0 
+
+np.zeros((10,10)) #This will create a 2d numpy array of length 10 of each element initialized with zeros
+np.zeros_like((10,10)) #this will create a 2d array with a single element of value 0 
+
+np.ones(10) #This will create a 1d numpy array of  10 of each element initialized with zeros
+np.oneslike(10) #this will create a 1d array with a single element of value 1
+
+np.ones((10,10)) #This will create a 2d numpy array of 10 rows and columns of each element initialized with zeros
+np.oneslike((10,10)) #this will create a 1d array with two  elements of value 1
+
+>>creating evenly spaced numpy array:
+
+np.linspace(0,10,10) # this will create a numpy array of 10 elements from 0 to 10 which are evenly spaced points
+
+>>creating an identity matrix:
+identity matrix is the 2d matrix with all diagonal elements as 1 and rest as zeros
+
+np.eye(10) # this will create 10x10 identity matrix
+
+>>creating random numpy array:
+
+np.random.randint(0,10,(5,2)) # this will create 5x2 matrix of random integers between 0 and 10 as elements
+np.random.rand(5,2) # this will create a  create 5x2 matrix of random numbers of type float  between 0 and 1
+np.random.randn(5,2) # this will create a  create 5x2 matrix of random numbers of type float  between -1 and 1
+
+c.Array Manipulation
+
+>>reshaping the size of an array :
+
+say you have a 5x2 array as below:
+
+np_rand=np.random.randint(0,10,(5,2))
+
+now you can reshape it into 2x5 as below:
+np_rand.reshape((2x5))
+
+>>Finding the shape:
+np_rand.shape
+
+>>finding the data type:
+np_rand.dtype()
+
+d. Performing aggregations:
+say you have a 5x2 array as below:
+
+np_rand=np.random.randint(0,10,(5,2))
+
+np_rand.max() # this will give you the max element of the array
+np_rand.min() # this will give you the min element of the array
+
+
+np_rand.argmax()# this will give you the index of  max element of the array
+np_rand.argmin()# this will give you the index of min element of the array
+
+e.numpy array can do normal slicing and indexing as of any python list
+
+f.numpy array v/s Python List:
+
+>>Broadcasting a value to array:
+We can Broadcast any single value to a slice  in numpy array unlike regular python list:
+
+np_rand[1:5] = 352
+
+But lets take the below case:
+a = np.arange(0,10) # this will generate the array of numbers from 0 to 9
+Now let's  we take  a slice of it and store it in another variable
+b=a[:5]
+unlike to a regular list , this is only a reference both b and a[:5] points to same object memory, that is 'a'
+so if we make any changes to 'b' , it will affect a also. But in case of list , slice of a list means new object,not a reference.
+>>Indexing a 2d array
+unlike to a list , we can index a 2d numpy array as follows:
+Say we have below 2d array:
+
+ar1=np.array([[1,2,3,4],[5,6,7,8],[1,2,3,4]) 
+
+Now we need to access the 1st row , 2nd element. We can do  
+
+ar1[0][1] #similar to any 2d list
+
+OR
+
+ar[0,1]#specific for a numpy array
+
+>> slicing a 2d numpy array
+
+Say we have a 2d array ar1  as below:
+array([[1, 2, 3, 4],
+       [5, 6, 7, 8],
+       [1, 2, 3, 4]])
+Now to get the below slice:
+
+array([[2, 3],
+       [6, 7]])
+	   
+we need to apply below slicing:
+
+ar1[:2,1:3]
+
+>> Creating a boolean array to apply filter
+unlike to a regular list, we can create a boolean numpy array as output of a numpy array
+lets say 
+
+arr=np.arange(10) # this will make a 1d numpy array of elements from 0 to 9
+if we say arr<5 or print(arr<5), this will give below output:
+
+array([ True,  True,  True,  True,  True, False, False, False, False,
+       False])
+Now we can pass the same output to arr and get the records filtered out :
+arr[arr<5] # this will create a new numpy array object with all elements less than 5
+
+
+g.Numpy Operations
+
+Performing arithmetic with a nummpy array is easy:
+
+say arr=array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+arr * arr will give you a new array of multiples of each elements
+arr / arr will give you a new array of quotients of division of each elements
+arr + arr will give you a new array of sum of each elements
+arr - arr will give you a new array of take away values of each elements
+arr ** 2 will give you exponents
+
+
+Note:
+if we have some non permissible arithmetics such as "divided by zero" , Numpy will throw 
+a warning instead of error and give  the output as 'nan'
+
+eg:
+arr/arr :
+
+RuntimeWarning: invalid value encountered in true_divide
+
+array([nan,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
+
+ 
+
+6.Pandas :
+
+>>Configuring Pandas
+
+
+Pandas can be installed using pip or pip3 as below:
+
+pip3 install pandas
+
+once installed you need to add the path of the package in Pycharm to make the Pycharm  recogonize the package
+To find the package path:
+
+pip show <package name>
+
+example:
+
+pip show pandas
+
+
+output is :
+
+Name: pandas
+Version: 0.23.4
+Summary: Powerful data structures for data analysis, time series, and statistics
+Home-page: http://pandas.pydata.org
+Author: None
+Author-email: None
+License: BSD
+Location: c:\users\wwwpa\appdata\local\programs\python\python37\lib\site-packages
+Requires: python-dateutil, numpy, pytz
+Required-by:
+
+
+Copy the path describe in Location and paste it in below section of Pycharm:
+
+File > Settings > Project > Project interpretor > select your project > click on settings icon near to project interpretor dropdown>
+click on 'show all' >  click on icon "show paths for the selected interpretor" > Add your path > click ok 
+
+>>Pandas.Series :
+
+one-dimensional labeled array capable of holding data of any type (integer, string, float, python objects, etc.). 
+The axis labels are collectively called index.
+
+Syntax:
+pandas.Series( data, index, dtype, copy)
+
+Here Data can be any type of collections,constants or even it can be an object (including functions)
+
+Index values must be unique and hashable, same length as data. Default np.arrange(n) if no index is passed.
+
+dtype is for data type. If None, data type will be inferred
+
+Copy data. Default False
+
+
+Example:
+
+import numpy as np
+import pandas as pd
+
+l=['á','b','c','d']
+t=(1,2,3,4)
+narr=np.array((1,2,3,4))
+d={1:'a',2:'b',3:'c',4:'d'}
+
+pd.Series(l) # here data = t
+
+output:
+0    á
+1    b
+2    c
+3    d
+dtype: object
+
+pd.Series(l,t) # here data = t and index = l
+
+output:
+1    á
+2    b
+3    c
+4    d
+dtype: object
+
+pd.Series(l,narr) # here data = t and index = narr
+
+output:
+Out[9]:
+1    á
+2    b
+3    c
+4    d
+dtype: object
+
+pd.Series(d) # here index is the key and data is the value for dictionary
+`
+1    a
+2    b
+3    c
+4    d
+dtype: object
+
+>>Pandas.Dataframes :
+
+A Data frame is a two-dimensional data structure, i.e., data is aligned in a tabular fashion in rows and columns.
+
+Features of DataFrame:
+
+Potentially columns are of different types
+Size – Mutable
+Labeled axes (rows and columns)
+Can Perform Arithmetic operations on rows and columns
+
+Create a DataFrame:
+Syntax:
+
+pandas.DataFrame( data, index, columns, dtype, copy)
+
+data:
+data takes various forms like ndarray, series, map, lists, dict, constants and also another DataFrame.
+
+
+index:
+For the row labels, the Index to be used for the resulting frame is Optional Default np.arrange(n) if no index is passed.
+
+columns:
+For column labels, the optional default syntax is - np.arrange(n). This is only true if no index is passed.
+
+dtype:
+Data type of each column.
+
+copy:
+This command (or whatever it is) is used for copying of data, if the default is False.
+
+example:
+
+from numpy import random
+import pandas as pd
+
+df = pd.DataFrame(random.randint(0,10,(5,4)),columns=['col1','col2','col3','col4'],index=range(1,6))
+
+#output is a table like structure with 5 rows and 4 colums 
+#Rows are indexed from 1 to 5
+#Column names are explicitely given
+
+Accessing a Dataframe:
+
+Accessing a single column:
+
+df['col1'] 
+
+note: if we check the output data type of every single column display,  we will get as padas.core.series.Series
+
+accessing multiple columns:
+df[['col1','col2']]
+
+note: if we check the output data type of every multiple  column display,  we will get as padas.core.frame.DataFrame	
+
+Accessing a Row:
+ df.loc[index_name]
+example:
+df.loc[3] # this will return a series containig all all column values for index=3
+
+OR
+
+df.iloc[index_position]
+
+Index position is the position of that particular row starting from very first row.First row of 
+every pandas Dataframe is having a position value (or index location value) of 0 . So of I need to 
+access 3rd row:
+df.iloc[2] # this will pick the 3rd row 
+
+
+Accessing multiple rows:
+df.loc[[3,4]] # this will return a series containig all all column values for index=3 and index=4
+
+OR
+
+df.iloc[[2,3]] # this will pick 3rd and 4th row
+
+Accessing a particular value:
+
+A particular value can also be accessed by using df.loc
+Say I need to access value in 1st row (assuming index=1) and 1st column (assuming column name is 'col1'):
+
+df.loc[1,'col1']
+
+OR
+
+df.iloc[0,0]
+
+If I need to access value in 1st and 2nd (index =  [1,2]) row as well as 1st and 2nd column ['col1','col2']
+
+df.loc[[1,2],['col1','col2']]
+
+OR
+
+df.iloc[[0,1],[0,1]]
+
+
+
+Inserting a New Column:
+
+We can simply create a new column by assigning values like this
+
+df['col5'] = range(0,5)
+
+OR
+
+df['col5'] = df['col4'] + df['col3']
+
+Here 'col5' is newly created with assigned value
+
+Droping a column/Row:
+
+Drop a column:
+
+To drop a column we need to explicitly mention 'axis=1' and 'inplace=True' . Because
+by default,axis is '0',means pointing to indexes (Rows) and inplace is 'False' means , existing df won't be affcted instead new modified
+dataframe object will be created.
+
+df.drop('col5',axis=1,inplace=True)
+
+Drop a Row:
+
+df.drop([1,2],inplace=True)
+
+>>Conditional Selection
+
+Say we have created a dataframe as below:
+
+from numpy import random
+import pandas as pd
+
+df=pd.DataFrame(random.randint(0,10,(5,4)),columns=['col1','col2','col3','col4'],index=range(1,6))
+
+Now if say:
+
+df > 2
+
+this will result in a boolean Dataframe where all column values which are greater than 2 will have true as value and all others will have false
+
+Now if we pass this to df itself as below:
+
+df[df>2]
+
+this will result in a dataframe with all column values which are greater than 2 will be displayed as it is and other will be displayed as 'NaN'
+
+But usually we do filters specifically on column basis.If I say more specifically, we need to filter all 'col4' values greater than 2,then we will say:
+
+df[df['col4']>2]
+
+If need two conditions to be satisfied, say , col4 and col3 values greater than 2, we wiil say:
+
+df[(df['col4']>2) & (df['col3']>2)]
+
+>>Set and Reset index
+
+By default when a pandas dataframe is created , we will have a default index column as defined by range(0,n-1), where n is the total number of rows
+
+We can specify the index at the time of creation of dataframe as follows:
+
+df=pd.DataFrame(random.randint(0,10,(5,4)),columns=['col1','col2','col3','col4'],index=range(1,6))
+
+But if we do like this , we don't have name for this index column. So to set the name , we do as follows:
+
+df.index.name='slno'
+
+We can also reset the index as follows:
+
+df.reset_index(inplace=True) #if inplace is not sepcified, it will create a new object with reset index
+
+we can set the index also in following way:
+
+df.set_index('slno',inplace=True)
+
+>>Multi Index:
+
+Creating Multi Index:
+Method 1:
+
+pd.MultiIndex() is used for creating a multi level index.Mandatory arguments are 
+levels=We need to pass collections of values as levels (whcih we are considering as index)
+labels= Labels are the positions to which each values will go
+
+optional, but required argument is :
+
+names: names of the index columns
+
+example:
+
+key1=['A','B']
+key2=[1,2,3]
+multi_index=pd.MultiIndex([key1,key2],[[0,0,0,1,1,1],[0,1,2,0,1,2]],names=['key1','key2'])
+
+method2:
+MultiIndex can be created more easily using methods in MultiIndex class of pandas
+
+One of the usual method is 
+
+MultiIndex.from_tuples(list_of_tuples) # here input is list of tuples in which each tuple represent the combination of column values
+which are considered for indexing
+
+example:
+
+key1=['A','A','A','B','B','B']
+key2=[1,2,3,1,2,3]
+t=list(zip(key1,key2)) # here key1 and key2 are considered for making index
+multi_index=pd.MultiIndex.from_tuples(t) 
+
+
+Using MultiIndex while creating a DataFrame:
+
+df=pd.DataFrame(randn(6,2),index=multi_index,columns=['col1','col2'])
+
+Accessing a multiIndex:
+
+MultiIndex can be accessed as same as normal index using DataFrame.loc() or DataFrame.iloc() method
+The difference is that , you need to access level by level 
+
+Example:
+to access all records of index key1='A', you need to say:
+df.loc['A'] 
+
+to access exactly first row :
+
+df.loc['A'].loc[1]
+
+OR 
+
+df.iloc[0]
+
+
+MultiIndex can also be accessed using DataFrame.xs(). This is particularly usefull when
+you need to skip one or more level of index and reach out to next.
+
+example:
+
+to access 1st record in key2 index column for every key1 value:
+
+df.xs[1,level='key2'] 
+
+>>Handling missing data
+
+dropping null value data :
+
+
+df.dropna() : This will drop all rows with np.NaN values
+
+df.dropna(axis=1) : This will drop all columns with np.NaN values
+
+df.dropna(thresh=2) : This will retain all rows with minimum 2 non np.NaN values and drop others
+
+filling null values:
+
+df.fillna(value=0): This will fill all null values with 0
+
+>>Group By and aggregate functions over a dataframe
+
+We can perform SQL similar Group By using DataFame.groupby()
+
+Say we have below Dataframe created:
+
+df=pd.DataFrame({'company':['GOOG','GOOG','MSFT','MSFT','FB','FB'],
+                 'year':['2017','2018','2017','2018','2017','2018'],'sales':[200,230,211,222,215,235]})
+				 
+we are going to calculate total sales per company as follows:
+
+total_sales=df.groupby('company')['sales'].sum() # this will groupby over company and gives sum of sales over it
+
+>>Concatenate , Merge and Join:
+
+pd.concat():
+
+This will concatenate two Dataframes
+
+Syntax with some important arguments:
+
+pd.concat(objs,axis=0,join='outer',sort=None)
+
+objs:
+We can pass the dataframes to be concatenated  here as a collections
+
+axis:
+As any other DataFame method arguments, axis is by default points to 0,means indices
+To set this to column level, we need to set axis=1
+
+join:
+Here its asking for what type of join to be performed. We have 'inner' and 'outer', by default it is 'outer'.
+
+example:
+
+lets create a DataFame first :
+
+yealry_sum1 = {'year':[2005,2006,2007,2008],'total_sales(Millions)':[238,256,274,325]}
+yealry_sum2 = {'year':[2007,2008,2009,2010,2010],'total_sales(Millions)':[273,324,336,368,368]}
+
+df1=pd.DataFrame(yealry_sum1,index=[1,2,3,4])
+df2=pd.DataFrame(yealry_sum2,index=[0,1,2,3,4])
+
+Below line of code will concatenate df1 and df2 vertically (axis=0):
+
+pd.concat([df1,df2])
+
+Below line of code will concatenate df1 and df2 horizontally, based on index columns (axis=1) with an outer join:
+
+pd.concat([df1,df2],axis=1,join='outer')
+
+Below line of code will concatenate df1 and df2 horizontally, based on index columns (axis=1) with an inner  join:
+
+pd.merge() or DataFrame.merge():
+
+This is similar to join operation in SQL
+                                                    
+													
+													
+													
+File Read and Write
+*********************
+
+https://stackoverflow.com/questions/1466000/python-open-built-in-function-difference-between-modes-a-a-w-w-and-r 
+
+                 | r   r+   w   w+   a   a+
+------------------|--------------------------
+read              | +   +        +        +
+write             |     +    +   +    +   +
+write after seek  |     +    +   +
+create            |          +   +    +   +
+truncate          |          +   +
+position at start | +   +    +   +
+position at end   |                   +   

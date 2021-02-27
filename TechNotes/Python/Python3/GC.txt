@@ -1,0 +1,90 @@
+Garbbage Collection in Python
+******************************
+references:
+https://rushter.com/blog/python-garbage-collector/
+https://www.youtube.com/watch?v=URNdRl97q_0
+
+
+
+1 . Python doesn't have variable , it has only names/labels.
+
+if we say ,
+a = 5
+
+in python it means label/name 'a'(in stack memory) is refering to  integer object 5 at a particular address at heap memory
+
+if again we say,
+
+b = 5 , it will add another label 'b' to stack memory and create a reference to same object 5 in the same momory address 
+
+id(a) = id(b)
+
+2. We have simple objects and container objects in Python
+simple objects  : numbers , string etc
+container objects : list , tuple, set, dictionary
+
+Containers can store references to simple objects or other containers
+
+
+
+3. T wo types of GC alogorithms in python
+
+
+b.Generational garbbage collector
+
+
+a.Reference counting:
+ 
+Reference counting is a simple technique in which objects are deallocated when there is no reference to them in a program.
+Every variable in Python is a reference (a pointer) to an object and not the actual value itself. For example, the assignment statement just adds a new reference to the right-hand side.
+
+To keep track of references, every object (even integer) has an extra field called reference count that is increased or decreased when a pointer to the object is created or deleted. 
+
+If reference counting field reaches zero, CPython automatically calls the object-specific memory deallocation function. If an object contains references to other objects, then their reference count is automatically decremented too. Thus other objects may be deallocated in turn. For example, when a list is deleted the reference count for all its items is decreased. If another variable references an item in a list, the item won't be deallocated.
+
+Variables, which are declared outside of functions, classes, and blocks are called globals. Usually, such variables live until the end of the Python's process. Thus, the reference count of objects, which are referred by global variables, never drops to zero.
+
+Variables, which are defined inside blocks (e.g., in a function or class) have a local scope (i.e., they are local to its block). When Python interpreter exits from a block, it destroys local variables and their references that were created inside the block.
+
+It's important to understand that until your program stays in a block, Python interpreter assumes that all variables inside it are in use. To remove something from memory, you need to either assign a new value to a variable or exit from a block of code. In Python, the most popular block of code is a function; this is where most the of garbage collection happens. That is another reason to keep functions small and simple.
+
+You can always check the number of current references using sys.getrefcount function.
+
+
+b.Generational garbage collector
+
+Unfortunately, classical reference counting has a fundamental problem — it cannot detect reference cycles. A reference cycle occurs when one or more objects are referencing each other.
+
+l=[1]
+l.append(l)
+del l
+
+here list is refering to itslef. So even if we delete the 'l' , still reference count of the object will remain as 1 and not zero. This is called cyclic reference,
+and these objects are the in acceessible  by python program.
+Since reference count is not zero , reference counting garabbage collection will not happen
+
+So we after python 1.5 , henerational garbbage collection has been introduced
+
+
+The GC classifies container objects into three generations. Every new object starts in the first generation. If an object survives a garbage collection round, it moves to the older (higher) generation. Lower generations are collected more often than higher. Because most of the newly created objects die young, it improves GC performance and reduces the GC pause time.
+
+In order to decide when to run, each generation has an individual counter and threshold. The counter stores the number of object allocations minus deallocations since the last collection. Every time you allocate a new container object, CPython checks whenever the counter of the first generation exceeds the threshold value. If so Python initiates the сollection process.
+
+If we have two or more generations that currently exceed the threshold, GC chooses the oldest one. That is because oldest generations are also collecting all previous (younger) generations
+
+The standard threshold values are set to (700, 10, 10) respectively, but you can always check them using the gc.get_threshold function. You can also adjust them for your particular workload by using the gc.get_threshold function.
+
+GC iterates over each container object and temporarily removes all references to all container objects it references. After full iteration, all objects which reference count lower than two are unreachable from Python's code and thus can be collected.
+
+Performance tips:
+
+To avoid circular references in your code, you can use weak references, that are implemented in the weakref module. Unlike the usual references, the weakref.ref doesn't increase the reference count and returns None if an object was destroyed.
+
+In some cases, it is useful to disable GC and use it manually. The automatic collection can be disabled by calling gc.disable(). To manually run the collection process, you need to use gc.collect().
+
+The standard gc module provides a lot of useful helpers that can help in debugging. If you set debugging flags to DEBUG_SAVEALL, all unreachable objects found will be appended to gc.garbage list.
+
+Generational garbage collector:
+
+
+

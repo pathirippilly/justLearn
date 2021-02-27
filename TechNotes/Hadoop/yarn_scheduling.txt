@@ -1,0 +1,119 @@
+yarn -Scheduler
+***************
+
+FIFO scheduler
+Fair scheduler
+Capacity Scheduler
+
+
+EMR clusters by default are configured with a single capacity scheduler queue and can run an only job at any given time. It uses the FIFO fashion for assigning tasks on the cluster. You can create and configure multiple queues in YARN Capacity Scheduler or switch to Fair Scheduler by creating your own queue
+
+
+FIFO scheduler:
+
+>>As name represents , it follows First In First Out method
+>>>Until required capacity of the prior jobs are less the cluster capacity, following jobs are not going to get resources
+>>FIFO is queue based scheduler
+
+confugure scheduler as below in yarn-site.xml:
+
+ <property>
+      <name>yarn.resourcemanager.scheduler.class</name>
+      <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler</value>
+    </property>
+
+
+
+
+lets say cluster capacity is 16 executors. First executor will be launched for Application master(AM)
+Rest is 15. Job 1 is submitted and 270 tasks are pending  and cluster capacity excluded of AM is 15.
+So 15 will be allocated. Now when a Job2 which needs only 5 tasks to be completed got submitted but it will not get any
+executor allocated unless untill total number of resources required for job is less than the number of available resources in cluster
+
+Capacity Scheduler:
+******************
+
+https://www.netjstech.com/2018/04/capacity-scheduler-in-yarn-hadoop.html
+
+
+Capacity scheduler is nothing but FIFO scheduler with in each queue
+Total cluster capacity will be divided in to multiple queues
+
+confugure scheduler as below in yarn-site.xml:
+
+    <property>
+      <name>yarn.resourcemanager.scheduler.class</name>
+      <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
+    </property>
+
+You will be having a root queue by default.
+Under root queue, you can create your won queues and we can assign capacities to each queue
+
+Capacity scheduler in Hadoop works on the concept of queues. Each organization gets its own dedicated queue with a percentage of the total cluster capacity for its own use. For example if there are two organizations sharing the cluster, one organization may be given 60% of the cluster capacity where as the organization is given 40%.
+
+On top of that, to provide further control and predictability on sharing of resources, the CapacityScheduler supports hierarchical queues. Organization can further divide its allocated cluster capacity into separate sub-queues for separate set of users with in the organization.
+
+Capacity scheduler is also flexible and allows allocation of free resources to any queue beyond its capacity. This provides elasticity for the organizations in a cost-effective manner. When the queue to which these resources actually belongs has increased demand the resources are allocated to it when those resources are released from other queues.
+
+
+If there are two child queues starting from root XYZ and ABC. XYZ further divides the queue into technology and development. XYZ is given 60% of the cluster capacity and ABC is given 40%.
+
+
+<property>
+  <name>yarn.scheduler.capacity.root.queues</name>
+  <value>XYZ, ABC</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.XYZ.queues</name>
+  <value>technology,marketing</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.XYZ.capacity</name>
+  <value>60</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.ABC.capacity</name>
+  <value>40</value>
+</property>
+
+
+
+If you want to limit the elasticity for applications in the queue. Restricting XYZ's elasticity to 80% so that it doesn't use more than 80% of the total cluster capacity even if resources are available. In other words ABC has 20% to start with immediately.
+
+
+<property>
+  <name>yarn.scheduler.capacity.root.XYZ.maximum-capacity</name>
+  <value>80</value>
+</property>
+
+
+
+
+Fair Scheduler
+***************
+https://blog.cloudera.com/yarn-fairscheduler-preemption-deep-dive/
+
+The FairScheduler uses hierarchical queues. Queues are sibling queues when they have the same parent. The weight associated with a queue determines the amount of resources a queue deserves in relation to its sibling queues. This amount is known as Steady FairShare. The Steady FairShare is calculated at queue level and for the root queue it is the equivalent to all the cluster resources. The Steady FairShare for a queue is calculated as follows:
+
+steady Fairshare = (steady Fairshare of Parent * weight of the queue)/sum of wights of all sibling queues
+
+This number only provides visibility into resources a queue can expect, and is not used in scheduling decisions, including preemption. In other words, it is the theoretical FairShare value of a queue.
+
+Instantaneous FairShare
+
+In order to enable elasticity in a multi-tenant cluster, FairScheduler allows queues to use more resources than their Steady FairShare when a cluster has idle resources. An active queue is one with at least one running application, whereas an inactive queue is one with no running applications.
+
+
+preemption and starvation are considering factors
+
+
+
+
+
+
+
+
+
+
+
+

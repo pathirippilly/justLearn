@@ -1,0 +1,157 @@
+Problem Statement
+*****************
+Problem Statement 
+
+Get daily revenue by product considering completed and closed orders.
+
+Data need to be sorted in ascending order by date and then descending
+order by revenue computed for each product for each day.
+
+Data for orders and order_items is available in HDFS
+
+/public/retail_db/orders and /public/retail_db/order_items
+
+Data for products is available locally under /data/retail_db/products
+
+Final output need to be stored under HDFS location – avro format
+
+/user/YOUR_USER_ID/daily_revenue_avro_python
+HDFS location – text format
+
+/user/YOUR_USER_ID/daily_revenue_txt_python
+Local location /home/YOUR_USER_ID/daily_revenue_python
+
+Solution need to be stored under
+/home/YOUR_USER_ID/daily_revenue_python.txt
+
+Solution:
+
+Launch Spark Shell - Understand the environment and use resources optimally
+1.	Need to understand the capacity of the cluster. For that we need to check the resorce manager.
+Resource manager url can be found in /etc/hadoop/conf/yarn-site.xml
+
+  <property>
+      <name>yarn.resourcemanager.webapp.address</name>
+      <value>rm01.itversity.com:19288</value>
+    </property>
+
+2.In this URl, you will have the total memory available , Vcores available..etc. to decide how much memory and cores need to be allocated,
+we need to check the file size of both HDFS files, as well as the product file in local file system
+
+checking the disk usage in local file system:
+du -s -h <file path>
+checking the disk usage in local file system:
+hadoop fs -du -s -h <hadoop file path>
+
+3.Here in our problem:
+checking the disk usage in local file system:
+
+[pathirippilly@gw03 ~]$ du -s -h  /data/retail_db/products
+176K    /data/retail_db/products
+
+checking the disk usage in local file system:
+
+[pathirippilly@gw03 ~]$ hadoop fs -du -s -h /user/pathirippilly/retail_db/orders
+2.9 M  /user/pathirippilly/retail_db/orders
+[pathirippilly@gw03 ~]$ hadoop fs -du -s -h /user/pathirippilly/retail_db/order_items
+5.2 M  /user/pathirippilly/retail_db/order_items
+
+
+since we have very less volume of data to be handled, we can run the spark shell on yarn with minimum resources as follows
+
+ pyspark --master yarn --conf spark.ui.port=21888 \
+ --num-executors 2 \
+ --executor-memory 512M
+ 
+ Code:
+#this will give the orders with staus completed and closed
+
+orders=sc.textFile("/user/pathirippilly/retail_db/orders").filter(lambda order : order.split(",")[3] in [2	,'COMPLETE']) 
+
+#This will give the RDD of orderitems
+orderitems=sc.textFile("/user/pathirippilly/retail_db/order_items")
+
+#Join of above rdds with out put columns in order of (order_no,(orderdate,'product_id,revenue per item'))
+
+orderitemsjoin=orders.map(lambda order : (int(order.split(",")[0]),int(order.split(",")[1].split(" ")[0].replace("-","")))).\
+join(orderitems.map(lambda oi : (int(oi.split(",")[1]),(int(oi.split(",")[2]),float(oi.split(",")[4]))))) #here we have converted the data in to YYYMMDD format
+
+#Below two lines of code will convert product file in local file system to RDD
+
+productlist = open("/data/retail_db/products/part-00000").read().splitlines() #converting text into list of rows(each row is an element of type string here)
+productRDD = sc.parallelize(productlist) # converting list in to RDD
+
+
+DailyRevenuebyproductID=orderitemsjoin.map(lambda order : ((order[1][0],order[1][1][0]),order[1][1][1])).\
+aggregateByKey(0.0,lambda x,y : x+y,lambda x,y: x+y)
+
+productjoinRevenue=productRDD.map(lambda p : (int(p.split(",")[0]),p.split(",")[2])).join(DailyRevenuebyproductID.map(lambda order :  (order[0][1],(order[1],order[0][0]))))
+
+DailyRevenuebyproductIDSorted=productjoinRevenue.map(lambda order :  ((order[1][1][1],-order[1][1][0]),(order[0],order[1][0],round(order[1][1][0],2),order[1][1][1]))).\
+sortByKey().map(lambda x:x[1])
+
+#Converting each row into string seperated by comma for saving in to tex file format
+DailyRevenuebyproductIDSortedAsText=DailyRevenuebyproductIDSorted.map(lambda x : ','.join(map(lambda y:str(y),x)))
+
+#Converting RDD in to DF for saving as avro file Format
+DailyRevenueByProductsDF=DailyRevenuebyproductIDSorted.toDF(["product_id","product_name","daily_revenue","date"])
+
+#Save as TextFile:Here six file will be generated for this small sized file.
+
+ DailyRevenuebyproductIDSortedAsText.saveAsTextFile("/user/pathirippilly/daily_revenue_txt_python")
+#if  you want to save it as 2 output splits , you can use below code
+DailyRevenuebyproductIDSortedAsText. \
+coalesce(2). \
+saveAsTextFile("/user/pathirippilly/daily_revenue_txt_python")
+
+#SAVING AS AVRO FILE : this requires a third party plugin from databricks which you need to pass either as a jar file path or as a package name while launching pyspark
+
+#launching a pyspark with third party package (which will be downloaded along with the environment set up and will be saved as a jar file)
+#similarlrly , we can pass the same argument, while doing spark-submit
+ pyspark --master yarn --conf spark.ui.port=21888 \
+ --num-executors 2 \
+ --executor-memory 512M \
+ --packages com.databricks:spark-avro_2.10:2.0.1
+#Directly passing jars
+
+ pyspark --master yarn --conf spark.ui.port=21888 \
+ --num-executors 2 \
+ --executor-memory 512M \
+ --jars <pathto jars>
+ #Saving the Data Frame as avro file in HDFS
+ 
+ DailyRevenueByProductsDF.save("/user/pathirippilly/daily_revenue_avro_python","com.databricks.spark.avro")
+ 
+ #validate the same data using sqlContext
+ sqlContext.load("/user/pathirippilly/daily_revenue_avro_python","com.databricks.spark.avro")
+ 
+ ##COPY BOTH OUTPUT FILE INTO LOCAL FILE SYSTEM
+ 
+hadoop fs -get /user/pathirippilly/daily_revenue_*_python /home/pathirippilly/daily_revenue_python/.
+
+DEVELOP AS AN APPLICATION(this is what heppens in real time project)
+********************************************************************
+
+1. In real time project , we will be developing the code in our loacal machine (or local client VDI), then we will be loading the code
+in to the cluster using winscp or sh command
+2.Here for the demo we have created a project folder as /home/pathirippilly/spark-jobs/src/main/python
+And we have placed our prgramming file here
+3.While running from spark-shell , spark context and spark configuration is done by the CLI implicitely. But in real time programming , we need to 
+invoke it as follows inside the .py file as firs lines of code
+
+from pyspark import SparkConf, SparkContext
+conf= SparkConf(). \
+    setAppName("Daily Revenue Per Product").\
+    setMaster("yarn-client")
+sc = SparkContext(conf=conf)
+
+<And after full lines of code>
+
+4.Once you save it, you can run it from the project folder /home/pathirippilly/spark-jobs using spark-submit command
+spark-submit \
+--master yarn \
+--conf spark.ui.port=21888 \
+--num-executors 2 \
+--executor-memory 512M \
+src/main/python/daily_revenue_per_product.py
+

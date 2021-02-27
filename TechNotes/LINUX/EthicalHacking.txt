@@ -1,0 +1,164 @@
+Ethical hacking
+***************
+
+initial settings:
+1. Install Kali linux on Vbox
+2. Upgrade once after installation
+apt-get install -y dkms linux-headers-$(uname -r)
+apt-get upgrade
+
+Commands:
+1. cp -v <source> <destination>
+-- this will copy the file as well as return the information that "what is copied and to where"
+2. <command> --help 
+OR
+man <command>
+this will give you the arguments available for a command
+
+
+3.grep -i : grep the text with ignore case
+
+4 . Changing permissions of a file
+
+chmod [reference][operator][mode] file
+
+Reference   Class     Description
+u          owner      file's owner
+
+g          group      users who are members of
+                      the file's group
+
+o          others     users who are neither the
+                      file's owner nor members of 
+                      the file's group 	  	
+
+a          all       All three of the above, same as ugo
+
+
+Operator  Description
++         Adds the specified modes to the
+          specified classes
+
+-         Removes the specified modes from 
+          the specified classes
+
+=         The modes specified are to be made
+          the exact modes for the specified 
+          classes
+		  
+
+r       Permission to read the file.
+w       Permission to write (or delete) the file.
+x       Permission to execute the file, or, in
+        the case of a directory, search it.
+		
+eg: chmod u=rwx,g=rx,o=r myfile
+if you want to remove execution permission from group for above file:
+ chmod g-x myfile
+if you want to add exection permission to the others:
+chmod o+x myfile
+
+Here is the equivalent command using octal permissions notation:
+
+chmod 754 myfile
+
+Here the digits 7, 5, and 4 each individually represent the permissions for the user, group, and others, in that order. Each digit is a combination of the numbers 4, 2, 1, and 0:
+
+4 stands for "read",
+2 stands for "write",
+1 stands for "execute", and
+0 stands for "no permission."
+
+5. user and group management
+
+a.Add a user
+adduser <user_name>
+
+b.add a group
+
+groupadd <group name>
+
+c.add a user to an existing group
+
+usermod -a -G <group name>
+
+6.Search for a file:
+
+locate test.txt --this will list you all files with name contains "test.txt" string
+
+
+What Is the "/etc/passwd" File
+***********************************
+
+
+
+1. Does not actually store passwords
+
+2. The first thing to note is that this file is accessible by unprivileged users.
+Let's take a look at a single line again:
+
+daemon:*:15455:0:99999:7:::
+These are fields defined in the "/etc/shadow" file:
+
+daemon: Account username.
+*: Salt and hashed password. You can see what this looks like with the root entry above. As noted above, the asterisk signifies that this account cannot be used to log in.
+15455: Last password change. This value is measured in days from the Unix "epoch", which is January 1, 1970.
+0: Days until password change permitted. 0 in this field means there are no restrictions.
+99999: Days until password change required. 99999 means that there is no limit to how long the current password is valid.
+7: Days of warning prior to expiration. If there is a password change requirement, this will warn the user to change their password this many days in advance.
+[blank]The last three fields are used to denote days before the account is made inactive, days since the Epoch when the account expires. The last field is unused.
+Each line in the file contains the login information of a single user on the system. Some of these users might be created for use by daemons and background services.
+
+Take a look at a single line to see what information it contains:
+
+root:x:0:0:root:/root:/bin/bash
+
+The fields of information are separated by a colon (:) character. There are seven fields on each line in a typical Linux "/etc/passwd" file:
+
+root: Account username.
+x: Placeholder for password information. The password is obtained from the "/etc/shadow" file.
+0: User ID. Each user has a unique ID that identifies them on the system. The root user is always referenced by user ID 0.
+0: Group ID. Each group has a unique group ID. Each user has a "primary" group that is used as the group by default. Again, the root group's ID is always 0.
+root: Comment field. This field can be used to describe the user or user's function. This can be anything from contact information for the user, to descriptions of the service the account was made for.
+/root: Home directory. For regular users, this would usually be "/home/username". For root, this is "/root".
+/bin/bash: User shell. This field contains the shell that will be spawned or the command that will be run when the user logs in.
+
+As you add user accounts using commands like "adduser" and "useradd", or as you install more services, this file will grow. New username information will be added to the bottom of this file.
+
+In most cases, you should not have to edit this file by hand. There are tools that manipulate this file and ensure that the proper syntax is maintained.
+
+
+How To Read the "/etc/shadow" File
+****************************************
+
+Note: The asterisk (*) value in the second field on some of the above lines means that the account cannot log in. This is mainly used for services and is intended behavior.
+
+Let's take a look at a single line again:
+
+daemon:*:15455:0:99999:7:::
+These are fields defined in the "/etc/shadow" file:
+
+daemon: Account username.
+*: Salt and hashed password. You can see what this looks like with the root entry above. As noted above, the asterisk signifies that this account cannot be used to log in.
+15455: Last password change. This value is measured in days from the Unix "epoch", which is January 1, 1970.
+0: Days until password change permitted. 0 in this field means there are no restrictions.
+99999: Days until password change required. 99999 means that there is no limit to how long the current password is valid.
+7: Days of warning prior to expiration. If there is a password change requirement, this will warn the user to change their password this many days in advance.
+[blank]The last three fields are used to denote days before the account is made inactive, days since the Epoch when the account expires. The last field is unused.
+
+Note: All kind of authentication logs you can find in auth.log
+
+
+
+
+
+STARTING WITH
+********************
+
+install tor (The onion router browser):
+
+apt-get install tor
+
+
+
+

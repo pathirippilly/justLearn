@@ -1,0 +1,196 @@
+Streaming Analytics
+***************
+
+
+
+Apcahe Flume:https://flume.apache.org/FlumeUserGuide.html
+************************************************************
+
+
+Apache Flume is a distributed, reliable, and available system for efficiently collecting, aggregating and moving large amounts of log data from many different sources to a centralized data store.
+
+The use of Apache Flume is not only restricted to log data aggregation. Since data sources are customizable, Flume can be used to transport massive quantities of event data including but not limited to network traffic data, social-media-generated data, email messages and pretty much any data source possible.
+
+A Flume event is defined as a unit of data flow having a byte payload and an optional set of string attributes. A Flume agent is a (JVM) process that hosts the components through which events flow from an external source to the next destination (hop).
+
+webserver --> Source -> Channel -> Sink --> HDFS
+
+refer=https://docs.cloudera.com/documentation/enterprise/6/6.3/topics/cdh_ig_flume_supported_sources_sinks_channels.html
+
+
+
+eg:1
+source: netcat (localhost message simulation)
+channel= memory
+sink = logger 
+
+>>>save the below configuration  as example.conf
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = r1
+a1.sinks = k1
+a1.channels = c1
+
+# Describe/configure the source
+a1.sources.r1.type = netcat
+a1.sources.r1.bind = localhost
+a1.sources.r1.port = 44444
+
+# Describe the sink
+a1.sinks.k1.type = logger
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel = c1
+
+
+>>>Copy all config file to your working directory
+ 
+cp /etc/flume/conf/* .
+
+flume-ng agent --name a1 --conf-file /home/pathirippilly/spark_codes/streaming/flume_demo/example.conf --conf  /home/pathirippilly/spark_codes/streaming/flume_demo/
+
+
+eg2:
+
+Here we are generating web server logs using a cloudera gen_logs
+
+Source=exec (Run a long-lived Unix process and read from stdout.)
+Sink=HDFS
+Channel=memory
+
+using exec we will collect messages from gen_logs 
+
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+wh.sources = ws
+wh.sinks = k1
+wh.channels = mem
+
+# Describe/configure the source
+wh.sources.ws.type = exec
+wh.sources.ws.command=tail -F /opt/gen_logs/logs/access.log
+# Describe the sink
+wh.sinks.k1.type = logger
+
+# Use a channel which buffers events in memory
+wh.channels.mem.type = memory
+wh.channels.mem.capacity = 1000
+wh.channels.mem.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+wh.sources.ws.channels = mem
+wh.sinks.k1.channel = mem
+
+flume-ng  -n wh -f /home/pathirippilly/spark_codes/streaming/flume_demo/wshdfs.conf
+
+
+eg:3
+HDFS as sink
+refer=https://archive.cloudera.com/cdh5/cdh/5/flume-ng/FlumeUserGuide.html#hdfs-sink
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+wh.sources = ws
+wh.sinks = hd
+wh.channels = mem
+
+# Describe/configure the source
+wh.sources.ws.type = exec
+wh.sources.ws.command=tail -F /opt/gen_logs/logs/access.log
+# Describe the sink
+wh.sinks.hd.type = hdfs
+wh.sinks.hd.hdfs.path=hdfs://nn01.itversity.com:8020/user/pathirippilly/flume_demo
+
+# Use a channel which buffers events in memory
+wh.channels.mem.type = memory
+wh.channels.mem.capacity = 1000
+wh.channels.mem.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+wh.sources.ws.channels = mem
+wh.sinks.hd.channel = mem
+
+
+flume-ng agent -n wh -f /home/pathirippilly/spark_codes/streaming/flume_demo/wshdfs.conf --conf  /home/pathirippilly/spark_codes/streaming/flume_demo/
+
+eg4:
+adding more sink properties for hdfs-sink
+
+Name	Default	Description
+channel	–	 
+type	–	The component type name, needs to be hdfs
+hdfs.path	–	HDFS directory path (eg hdfs://namenode/flume/webdata/)
+hdfs.filePrefix	FlumeData	Name prefixed to files created by Flume in hdfs directory
+hdfs.fileSuffix	–	Suffix to append to file (eg .avro - NOTE: period is not automatically added)
+hdfs.inUsePrefix	–	Prefix that is used for temporal files that flume actively writes into
+hdfs.inUseSuffix	.tmp	Suffix that is used for temporal files that flume actively writes into
+hdfs.rollInterval	30	Number of seconds to wait before rolling current file (0 = never roll based on time interval)
+hdfs.rollSize	1024	File size to trigger roll, in bytes (0: never roll based on file size)
+hdfs.rollCount	10	Number of events written to file before it rolled (0 = never roll based on number of events)
+hdfs.idleTimeout	0	Timeout after which inactive files get closed (0 = disable automatic closing of idle files)
+hdfs.batchSize	100	number of events written to file before it is flushed to HDFS
+hdfs.codeC	–	Compression codec. one of following : gzip, bzip2, lzo, lzop, snappy
+hdfs.fileType	SequenceFile	File format: currently SequenceFile, DataStream or CompressedStream (1)DataStream will not compress output file and please don’t set codeC (2)CompressedStream requires set hdfs.codeC with an available codeC
+
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+wh.sources = ws
+wh.sinks = hd
+wh.channels = mem
+
+# Describe/configure the source
+wh.sources.ws.type = exec
+wh.sources.ws.command=tail -F /opt/gen_logs/logs/access.log
+# Describe the sink
+wh.sinks.hd.type = hdfs
+wh.sinks.hd.hdfs.path=hdfs://nn01.itversity.com:8020/user/pathirippilly/flume_demo
+wh.sinks.hd.hdfs.filePrefix=flumeDemo
+wh.sinks.hd.hdfs.fileSuffix=.txt
+wh.sinks.hd.hdfs.rollInterval=0
+wh.sinks.hd.hdfs.rollSize=1048576
+wh.sinks.hd.hdfs.rollCount=0
+wh.sinks.hd.hdfs.fileType=DataStream
+# Use a channel which buffers events in memory
+wh.channels.mem.type = memory
+wh.channels.mem.capacity = 1000
+wh.channels.mem.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+wh.sources.ws.channels = mem
+wh.sinks.hd.channel = mem
+
+
+flume-ng agent -n wh -f /home/pathirippilly/spark_codes/streaming/flume_demo/wshdfs.conf --conf  /home/pathirippilly/spark_codes/streaming/flume_demo/
+
+
+eg:5
+Altering the channel configuration (here its memory)
+
+flume=
+
+
+
+
+
+
+
+
+
+
+
+
+
+
