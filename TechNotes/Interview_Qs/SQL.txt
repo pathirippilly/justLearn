@@ -1,0 +1,55 @@
+
+Q: Could you please help me in understanding your Big Data Experience
+Q: How much volumes of data you have worked with in HDFS
+
+
+SQL:
+
+1.Say I am having a table where no primary keys are defined . How you will remove duplicates from the table
+2.Difference between rank(),dense_rank() and row_number()
+3.Say I have a table A , table B
+
+table A is having :
+
+3 records with id 1
+2 records with id 2
+1 records with id 4
+1 record with 1d 6
+
+table B is having :
+
+2 records with id 1
+2 records with id 2
+3 records with id 4
+2 records with id 5
+
+How many records I will get as a whole if I will do a 
+
+inner join :
+
+1 - 6
+2 - 4
+
+left :
+
+1 - 6
+2 - 4
+4 - 3
+5 - 0
+6 - 1
+
+right :
+
+1 - 6
+2 - 4
+4 - 3
+5 - 2
+6 - 0
+
+full :
+
+1 - 6
+2 - 4
+4 - 3
+5 - 2
+6 - 1

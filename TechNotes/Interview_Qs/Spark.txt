@@ -1,0 +1,29 @@
+Spark:
+
+1.Why spark if we already have MapReduce for distributed computing in hive
+
+2.Can you explain me what heppens once you will submit a spark job
+
+3.What is the difference between lineage graph and DAG
+
+4.What is an RDD
+5.What is an executor Spark. What does it do
+6.Difference between RDD and DataFrame
+7.What is a partition in Spark
+8.what is the default number of partitions created in spark.What determines it
+9.How do we change default number of partitions in spark
+10.Repartition v/s coalesce:when can use what 
+11.Difference between Transformation and Action
+12.Narrow and Wide transformation
+13.Map v/s flatMap
+14.Count of records in each partition 
+15.What are accumulators and broadcast variables.When it is used
+16.SparksSession and SparkContext
+18.Difference between client mode and cluster mode.
+19.Are you familiar with Window functions in Spark.
+20.How we remove duplicates from a DataFrame
+21.Difference between client mode and cluster mode.
+22.What is the window size that you are using in your project for spark streaming applications
+23.What are DStreams?
+Spark Streaming Questions :
+https://www.interviewgrid.com/interview_questions/bigdata_spark/bigdata_spark_streaming

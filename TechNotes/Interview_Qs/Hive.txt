@@ -1,0 +1,60 @@
+Hive:
+
+1. Differenece between internal and external tables in hive
+2. What all the hive ouput file formats that you have worked with
+3. What is the difference between texf file formats v/s (ORC/AVRO/Parquet)
+4.difference between parquet,ORC and avro and when it can be used
+5. What is Predicate Pushdown in Parquet/ORC files
+6.Differenece between partitioning and clustering in hive
+7.Say I am having table named products. Its having columns ProdID,Prod Name, and colours.
+So this colour column is a array data type.I want to list each colour for same product in seperated rows
+rather than in a collection. How will I achieve this(Explode and Lateral View)
+SELECT p.id,p.productname,colors.colorselection FROM default.products P LATERAL VIEW EXPLODE(p.productcoloroptions) colors as colorselection;
+
+8. Can we do updates to hive tables as in RDBMS. If yes how.
+9.Differenec between dynamic and static partition in hive
+
+
+i. Hive Static Partitioning
+
+Insert input data files individually into a partition table is Static Partition.
+Usually when loading files (big files) into Hive tables static partitions are preferred.
+Static Partition saves your time in loading data compared to dynamic partition.
+You “statically” add a partition in the table and move the file into the partition of the table.
+We can alter the partition in the static partition.
+You can get the partition column value from the filename, day of date etc without reading the whole big file.
+If you want to use the Static partition in the hive you should set property set hive.mapred.mode = strict This property set by default in hive-site.xml
+Static partition is in Strict Mode.
+You should use where clause to use limit in the static partition.
+You can perform Static partition on Hive Manage table or external table.
+
+ii. Hive Dynamic Partitioning
+
+Single insert to partition table is known as a dynamic partition.
+Usually, dynamic partition loads the data from the non-partitioned table.
+Dynamic Partition takes more time in loading data compared to static partition.
+When you have large data stored in a table then the Dynamic partition is suitable.
+If you want to partition a number of columns but you don’t know how many columns then also dynamic partition is suitable.
+Dynamic partition there is no required where clause to use limit.
+we can’t perform alter on the Dynamic partition.
+You can perform dynamic partition on hive external table and managed table.
+If you want to use the Dynamic partition in the hive then the mode is in non-strict mode.
+Here are Hive dynamic partition properties you should allow
+
+9. What is a map side join or Boroadcast join
+
+https://data-flair.training/blogs/map-join-in-hive/
+
+10.What is Bucket map join 
+
+https://data-flair.training/blogs/bucket-map-join/
+
+11.what is SMB join (Sort Merge Bucket Join)
+
+https://data-flair.training/blogs/hive-sort-merge-bucket-join/
+
+12.What all the performance tuning techniques you have implemented in Hive
+
+13. How you have implemented SCD2 in hive
+
+14.How you will schedule hive jobs 

@@ -1,0 +1,58 @@
+Sqoop:
+Q:
+Default number of mappers in Sqoop
+4
+Q:How you can change the number of mappers used in sqoop
+-m or --num-mappers
+
+Q: Default number of reducers in sqoop
+
+
+Q: difference between --target-dir and --warehouse-dir parameters in sqoop. When these parameters are used
+
+Q:What is the significance of Eval tool?
+
+Sqoop Eval would help you to make use of the sample SQL queries. This can be against the database as 
+it can preview the results that are displayed on the console. Interestingly, with the help of the Eval tool,
+you would be well aware of the fact that the desired data can be imported correctly or not.
+
+Q:How can I overwrite an existing target directory in Sqoop import
+
+--table order_items \
+--warehouse-dir /user/pathirippilly/sqoop_import/retail_db \
+--append
+
+sqoop import -connect jdbc:mysql://ms.itversity.com:3306/retail_db --username retail_user --password itversity \
+--table order_items \
+--warehouse-dir /user/pathirippilly/sqoop_import/retail_db \
+--delete-target-dir
+Q:How can I append  an existing target directory in Sqoop import
+
+
+Q: What is a split-by will do and when it can be used.
+
+Q: What all the different type of output file formats that you are ware about in sqoop:
+
+Q: How you will implement Compression while sqoop import
+
+Q: What is the default compression codec used by sqoop
+
+Q:How can you implement a different compression codec than the default one in sqoop
+
+Q: How does sqoop works in background
+
+Q:What is a --boundary-query parameter will do
+
+Q:If I need to only spacific columns (not all columns) to be fetched while doing a sqoop import , what I wil do.
+
+Q:If I need to get data from RDBMS joining multiple tables , using sqoop import , how you will implement
+
+Q:what is the Default field delimitter sqoop output file and how can we change that
+
+By default, it takes delimiter as a tab but if you want to explicitly define it you need to use this command.
+
+--fields-terminated-by <char>
+
+Q: How do you implement incremental load using Sqoop
+
+Q: How you will import RDBMS data directly into Hive table using sqoop

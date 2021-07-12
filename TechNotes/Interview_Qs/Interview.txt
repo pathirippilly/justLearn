@@ -1,0 +1,318 @@
+Interview list
+********************
+
+Q: Could you please help me in understanding your Big Data Experience
+Q: How much volumes of data you have worked with in HDFS
+
+
+
+
+
+Hadoop Basics:
+
+Q: 
+Moving file between HDFS and gateway node
+
+Q:
+
+I have a large file available in HDFS cluster,I would like to know following things 
+
+a. I would like to know what all are the blocks, locations , the files are available.
+b. I would like to know what is the size of the given file in Hadoop 
+
+Q: What is safe mode in Hadoop and how to enter safe mode:
+
+NameNode during which NameNode doesn't allow any changes to the file system. During Safe Mode, HDFS cluster is read-only and doesn't replicate or delete blocks
+
+hdfs dfsadmin -safe mode enter
+
+Q:What is a block in HDFS and what is its default size in Hadoop 1 and Hadoop 2? Can we change the block size?
+
+Blocks are smallest continuous data storage in a hard drive. For HDFS, blocks are stored across Hadoop cluster.
+
+The default block size in Hadoop 1 is: 64 MB
+The default block size in Hadoop 2 is: 128 MB
+Yes, we can change block size by using the parameter – dfs.block.size located in the hdfs-site.xml file.
+
+Q:
+
+Which property defines the maximum block replication factor.
+
+dfs.replication.max
+
+Q:
+How can you overwrite the replication factors in HDFS
+ 
+The replication factor in HDFS can be modified or overwritten in 2 ways-
+
+1)Using the Hadoop FS Shell, replication factor can be changed per file basis using the below command-
+
+$hadoop fs –setrep –w 2 /my/test_file (test_file is the filename whose replication factor will be set to 2)
+
+2)Using the Hadoop FS Shell, replication factor of all files under a given directory can be modified using the below command-
+
+3)$hadoop fs –setrep –w 5 /my/test_dir (test_dir is the name of the directory and all the files in this directory will have a replication factor set to 5)
+
+
+Q:
+What are the major differences between hadoop 1.x and 2.x 
+
+https://www.journaldev.com/8806/differences-between-hadoop1-and-hadoop2
+
+Q: Why YARN over Job tracker
+
+Q: What all the components of a YRAN architecture
+
+Q: What all the different types of input file formats you hva worked on
+
+Q: What is FSimage and edit log
+
+
+Sqoop:
+Q:
+Default number of mappers in Sqoop
+4
+Q:How you can change the number of mappers used in sqoop
+-m or --num-mappers
+
+Q: Default number of reducers in sqoop
+
+
+Q: difference between --target-dir and --warehouse-dir parameters in sqoop. When these parameters are used
+
+Q:What is the significance of Eval tool?
+
+Sqoop Eval would help you to make use of the sample SQL queries. This can be against the database as 
+it can preview the results that are displayed on the console. Interestingly, with the help of the Eval tool,
+you would be well aware of the fact that the desired data can be imported correctly or not.
+
+Q:How can I overwrite an existing target directory in Sqoop import
+
+--table order_items \
+--warehouse-dir /user/pathirippilly/sqoop_import/retail_db \
+--append
+
+sqoop import -connect jdbc:mysql://ms.itversity.com:3306/retail_db --username retail_user --password itversity \
+--table order_items \
+--warehouse-dir /user/pathirippilly/sqoop_import/retail_db \
+--delete-target-dir
+Q:How can I append  an existing target directory in Sqoop import
+
+
+Q: What is a split-by will do and when it can be used.
+
+Q: What all the different type of output file formats that you are ware about in sqoop:
+
+Q: How you will implement Compression while sqoop import
+
+Q: What is the default compression codec used by sqoop
+
+Q:How can you implement a different compression codec than the default one in sqoop
+
+Q: How does sqoop works in background
+
+Q:What is a --boundary-query parameter will do
+
+Q:If I need to only spacific columns (not all columns) to be fetched while doing a sqoop import , what I wil do.
+
+Q:If I need to get data from RDBMS joining multiple tables , using sqoop import , how you will implement
+
+Q:what is the Default field delimitter sqoop output file and how can we change that
+
+By default, it takes delimiter as a tab but if you want to explicitly define it you need to use this command.
+
+--fields-terminated-by <char>
+
+Q: How do you implement incremental load using Sqoop
+
+Q: How you will import RDBMS data directly into Hive table using sqoop
+
+
+
+Hive:
+
+1. Differenece between internal and external tables in hive
+2. What all the hive ouput file formats that you have worked with
+3. What is the difference between texf file formats v/s (ORC/AVRO/Parquet)
+4.difference between parquet,ORC and avro and when it can be used
+5. What is Predicate Pushdown in Parquet/ORC files
+6.Differenece between partitioning and clustering in hive
+7.Say I am having table named products. Its having columns ProdID,Prod Name, and colours.
+So this colour column is a array data type.I want to list each colour for same product in seperated rows
+rather than in a collection. How will I achieve this(Explode and Lateral View)
+SELECT p.id,p.productname,colors.colorselection FROM default.products P LATERAL VIEW EXPLODE(p.productcoloroptions) colors as colorselection;
+
+8. Can we do updates to hive tables as in RDBMS. If yes how.
+9.Differenec between dynamic and static partition in hive
+
+
+i. Hive Static Partitioning
+
+Insert input data files individually into a partition table is Static Partition.
+Usually when loading files (big files) into Hive tables static partitions are preferred.
+Static Partition saves your time in loading data compared to dynamic partition.
+You “statically” add a partition in the table and move the file into the partition of the table.
+We can alter the partition in the static partition.
+You can get the partition column value from the filename, day of date etc without reading the whole big file.
+If you want to use the Static partition in the hive you should set property set hive.mapred.mode = strict This property set by default in hive-site.xml
+Static partition is in Strict Mode.
+You should use where clause to use limit in the static partition.
+You can perform Static partition on Hive Manage table or external table.
+
+ii. Hive Dynamic Partitioning
+
+Single insert to partition table is known as a dynamic partition.
+Usually, dynamic partition loads the data from the non-partitioned table.
+Dynamic Partition takes more time in loading data compared to static partition.
+When you have large data stored in a table then the Dynamic partition is suitable.
+If you want to partition a number of columns but you don’t know how many columns then also dynamic partition is suitable.
+Dynamic partition there is no required where clause to use limit.
+we can’t perform alter on the Dynamic partition.
+You can perform dynamic partition on hive external table and managed table.
+If you want to use the Dynamic partition in the hive then the mode is in non-strict mode.
+Here are Hive dynamic partition properties you should allow
+
+9. What is a map side join or Boroadcast join
+
+https://data-flair.training/blogs/map-join-in-hive/
+
+10.What is Bucket map join 
+
+https://data-flair.training/blogs/bucket-map-join/
+
+11.what is SMB join (Sort Merge Bucket Join)
+
+https://data-flair.training/blogs/hive-sort-merge-bucket-join/
+
+12.What all the performance tuning techniques you have implemented in Hive
+
+13. How you have implemented SCD2 in hive
+
+14.How you will schedule hive jobs 
+
+Spark:
+
+1.Why spark if we already have MapReduce for distributed computing in hive
+
+2.Can you explain me what heppens once you will submit a spark job
+
+3.What is the difference between lineage graph and DAG
+
+4.What is an RDD
+5.What is an executor Spark. What does it do
+6.Difference between RDD and DataFrame
+7.What is a partition in Spark
+8.what is the default number of partitions created in spark.What determines it
+9.How do we change default number of partitions in spark
+10.Repartition v/s coalesce:when can use what 
+11.Difference between Transformation and Action
+12.Narrow and Wide transformation
+13.Map v/s flatMap
+14.Count of records in each partition 
+15.What are accumulators and broadcast variables.When it is used
+16.SparksSession and SparkContext
+18.Difference between client mode and cluster mode.
+19.Are you familiar with Window functions in Spark.
+20.How we remove duplicates from a DataFrame
+21.Difference between client mode and cluster mode.
+22.What is the window size that you are using in your project for spark streaming applications
+23.What are DStreams?
+Spark Streaming Questions :
+https://www.interviewgrid.com/interview_questions/bigdata_spark/bigdata_spark_streaming
+
+SQL:
+
+1.Say I am having a table where no primary keys are defined . How you will remove duplicates from the table
+2.Difference between rank(),dense_rank() and row_number()
+3.Say I have a table A , table B
+
+table A is having :
+
+3 records with id 1
+2 records with id 2
+1 records with id 4
+1 record with 1d 6
+
+table B is having :
+
+2 records with id 1
+2 records with id 2
+3 records with id 4
+2 records with id 5
+
+How many records I will get as a whole if I will do a 
+
+inner join :
+
+1 - 6
+2 - 4
+
+left :
+
+1 - 6
+2 - 4
+3 - 0
+4 - 1
+5 - 0
+6 - 1
+
+right :
+
+1 - 6
+2 - 4
+3 - 1
+4 - 0
+5 - 1
+6 - 0
+
+full :
+
+1 - 6
+2 - 4
+3 - 1
+4 - 1
+5 - 1
+6 - 1
+
+
+Data ware housing/ETL:
+
+1.What are junk dimensions
+2.What are degenerated  dimensions
+3.What are role playing dimensions
+4.what are conformed dimensions
+5.SCD1,SCD2,SCD3
+6.Delta load and hostory load
+
+
+
+unix:
+
+1. Command for deleteing all sub directories and files in a directory
+2. How to find the size of a file in linux
+3.  What is the behavioral difference between “cmp” and “diff” commands?
+
+Both commands for file comparison.
+
+Cmp – Compare given two files with byte by byte and display the first mismatch.
+
+Diff – Display changes that need to done to make both file identical.
+
+4. chmod, chown, chgrp
+
+chmod – Change the permission set of the file.
+chown – Change ownership of the file.
+chgrp – Change group of the file.
+
+5. How can we find current running proccess and how canb we filter a specific proccess from trhat
+
+ “ps –ef” command is used to find current running process. Also “grep” with a pipe can use to find specific process.
+ 
+6. What is the command to find remaining disk space in UNIX server?
+
+The command “df -kl” use to get a detail description on disk space usage.
+
+
+
+
+

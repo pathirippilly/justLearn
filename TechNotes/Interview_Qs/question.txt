@@ -1,0 +1,6 @@
+Say I am having a dataframe named "orderitems" with below schema
+
+		DataFrame[order_item_id: int, order_item_order_id: int, order_item_product_id: int, order_item_quantity: int, order_item_subtotal: float, order_item_product_price: float]
+
+So As a part of checking the data quality , I need to ensure all rows satisfies  order_item_subtotal = order_item_quantity*order_item_product_price. 
+For this I need to add a seperated column named "valid" which should have 'Y' as value for all rows satifies 

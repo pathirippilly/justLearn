@@ -1,0 +1,58 @@
+Hadoop Basics:
+
+Q: 
+Moving file between HDFS and gateway node
+
+Q:
+
+I have a large file available in HDFS cluster,I would like to know following things 
+
+a. I would like to know what all are the blocks, locations , the files are available.
+b. I would like to know what is the size of the given file in Hadoop 
+
+Q: What is safe mode in Hadoop and how to enter safe mode:
+
+NameNode during which NameNode doesn't allow any changes to the file system. During Safe Mode, HDFS cluster is read-only and doesn't replicate or delete blocks
+
+hdfs dfsadmin -safe mode enter
+
+Q:What is a block in HDFS and what is its default size in Hadoop 1 and Hadoop 2? Can we change the block size?
+
+Blocks are smallest continuous data storage in a hard drive. For HDFS, blocks are stored across Hadoop cluster.
+
+The default block size in Hadoop 1 is: 64 MB
+The default block size in Hadoop 2 is: 128 MB
+Yes, we can change block size by using the parameter – dfs.block.size located in the hdfs-site.xml file.
+
+Q:
+
+Which property defines the maximum block replication factor.
+
+dfs.replication.max
+
+Q:
+How can you overwrite the replication factors in HDFS
+ 
+The replication factor in HDFS can be modified or overwritten in 2 ways-
+
+1)Using the Hadoop FS Shell, replication factor can be changed per file basis using the below command-
+
+$hadoop fs –setrep –w 2 /my/test_file (test_file is the filename whose replication factor will be set to 2)
+
+2)Using the Hadoop FS Shell, replication factor of all files under a given directory can be modified using the below command-
+
+3)$hadoop fs –setrep –w 5 /my/test_dir (test_dir is the name of the directory and all the files in this directory will have a replication factor set to 5)
+
+
+Q:
+What are the major differences between hadoop 1.x and 2.x 
+
+https://www.journaldev.com/8806/differences-between-hadoop1-and-hadoop2
+
+Q: Why YARN over Job tracker
+
+Q: What all the components of a YRAN architecture
+
+Q: What all the different types of input file formats you hva worked on
+
+Q: What is FSimage and edit log

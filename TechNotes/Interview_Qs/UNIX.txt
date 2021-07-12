@@ -1,0 +1,25 @@
+unix:
+
+1. Command for deleteing all sub directories and files in a directory
+2. How to find the size of a file in linux
+3.  What is the behavioral difference between “cmp” and “diff” commands?
+
+Both commands for file comparison.
+
+Cmp – Compare given two files with byte by byte and display the first mismatch.
+
+Diff – Display changes that need to done to make both file identical.
+
+4. chmod, chown, chgrp
+
+chmod – Change the permission set of the file.
+chown – Change ownership of the file.
+chgrp – Change group of the file.
+
+5. How can we find current running proccess and how canb we filter a specific proccess from trhat
+
+ “ps –ef” command is used to find current running process. Also “grep” with a pipe can use to find specific process.
+ 
+6. What is the command to find remaining disk space in UNIX server?
+
+The command “df -kl” use to get a detail description on disk space usage.

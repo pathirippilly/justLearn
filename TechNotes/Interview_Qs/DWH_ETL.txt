@@ -1,0 +1,8 @@
+Data ware housing/ETL:
+
+1.What are junk dimensions
+2.What are degenerated  dimensions
+3.What are role playing dimensions
+4.what are conformed dimensions
+5.SCD1,SCD2,SCD3
+6.Delta load and hostory load
