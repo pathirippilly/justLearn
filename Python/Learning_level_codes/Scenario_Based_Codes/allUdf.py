@@ -25,3 +25,43 @@ def getAllSublist(inpL,k):
                 else:
                     break
     return outL
+
+
+class node:
+    def __init__(self, data, next=None):
+        self.data = data
+        self.next = next
+
+    def __str__(self):
+        return str(self.data)
+
+    def __repr__(self):
+        return str(self.data)
+
+
+class linkedList:
+    def __init__(self, data=None):
+        if data:
+            self.head = node(data)
+        else:
+            self.head = None
+
+    def append(self, data):
+        newNode = node(data)
+        if self.head:
+            currentNode = self.head
+            while (currentNode.next):
+                currentNode = currentNode.next
+            currentNode.next = newNode
+        else:
+            self.head = newNode
+
+    def __repr__(self):
+        currentNode = self.head
+        out = ''
+        while (currentNode):
+            out = out + str(currentNode)
+            currentNode = currentNode.next
+            if currentNode:
+                out = out + ","
+        return f"{self.__class__.__name__}({out})"
