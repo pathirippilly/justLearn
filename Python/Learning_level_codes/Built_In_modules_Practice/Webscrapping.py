@@ -51,3 +51,4 @@ with open(r'A:\sample.html', 'w+',encoding="utf-8") as f:
 #soup.find("div",class_="footer")) #gives the  division with specific class=footer
 #article=soup.find("div",class_="article")
 #print(article.h2.a.text) #accessing header text of the article
+

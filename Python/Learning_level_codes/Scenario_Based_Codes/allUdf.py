@@ -1,5 +1,12 @@
 #Return list of all possible sublist from a list as input
 from multipledispatch import dispatch
+from functools import wraps
+from datetime import time.t
+def wrapIt(func):
+    @wraps()
+    def wrapper(*args,**kwargs):
+        t
+
 @dispatch(list)
 def getAllSublist(inpL):
     outL=[]
