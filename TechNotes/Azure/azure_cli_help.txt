@@ -1,0 +1,20 @@
+Install the latest version of azure cli on Windows:
+PowerShell command : $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; rm .\AzureCLI.msi
+
+Resource group handling
+************************
+1. az group create -l centralindia -n demoresourcegroup --> creates a resource group with respective
+name (-n) and location (-l)
+2. az group list --> returns a list of json  in which each json object  corresponding to a resource group
+3. az group list --query [*].[name,location] --output table --> returns name and location  of all resource groups
+in table format
+4. az group list --query "[?location=='centralindia'].{name:name,location:location}" --output table -->
+This will filter out resource groups created under centralindia location and display it in table format
+5. az group delete -n demoresourcegroup
+
+storage account handling
+************************
+
+
+
+
