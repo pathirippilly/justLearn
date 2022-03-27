@@ -1,0 +1,11 @@
+# YAML Config
+data:
+  columns:
+    col1:
+      datatype : str
+      is_partition_col: False
+      is_Nullable : True
+    col2:
+      datatype : date
+      is_partition_col: True
+      is_nullable : False

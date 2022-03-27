@@ -1,6 +1,6 @@
 import unittest
 from unittest import mock
-from oops_demo_source import Employee, BadResponseException
+from oops_demo_source import Employee, BadResponseException,EtlBaseClass
 
 
 # unittest.TestLoader.testMethodPrefix='testit'
