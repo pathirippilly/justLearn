@@ -24,5 +24,6 @@ import subprocess
 #os.path.exists("A:\\test_dir\\test123\\test234\\test123\\new_test.txt") #check if path exists or not
 #os.path.isfile() #check if given path is a file
 #os.path.isdir() #check if given path is a directory
-#os.path.splitext('ur_path') #this will reurn a tuple of first element as full path including text name exluded of extension and second element as extension
-os.path.getsize()
+a=os.path.splitext('ur_path') #this will return a tuple of first element as full path including text name exluded of extension and second element as extension
+# os.path.getsize()
+print(globals())
