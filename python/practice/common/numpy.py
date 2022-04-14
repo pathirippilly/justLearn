@@ -1,9 +1,3 @@
-import numpy as np
-import sys
-import time
-import matplotlib.pyplot as plt
-
-
 ##graph of sine and cosine
 #x=np.arange(0,3*np.pi,0.1)
 #y=np.sin(x)
