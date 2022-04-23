@@ -1,5 +1,5 @@
 import unittest
-from activities import eat, nap, is_funny, laugh
+from code_practice.python.Python3_bootcamp.modules.activities import eat, nap, is_funny, laugh
 
 
 class ActivityTests(unittest.TestCase):
